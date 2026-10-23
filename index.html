@@ -99,6 +99,10 @@ svg.i { width: 1em; height: 1em; fill: currentColor; flex: none; }
 .has-img .art { background-image: linear-gradient(180deg, rgb(0 0 0 / .25), transparent 30%, transparent 55%, rgb(0 0 0 / .6)), var(--img); background-size: cover, auto 134%; background-position: center; background-repeat: no-repeat; }
 .has-img .art::before { display: none; }
 .has-img .mini, .mini.has-img { background-image: var(--img-s); background-size: cover; background-position: center; color: transparent; }
+.art .video { position: absolute; inset: 0; z-index: 2; background: #000; }
+.art .video iframe { width: 100%; height: 100%; border: 0; display: block; }
+.pb.play { background: var(--fg); color: var(--ink); }
+.pb.play:hover { background: var(--fg); }
 .art .nr { position: absolute; left: 14px; top: 12px; font-weight: 600; font-size: 13px; color: rgb(255 255 255 / .8); font-variant-numeric: tabular-nums; }
 .art .medley { position: relative; font-size: 13px; color: rgb(255 255 255 / .85); font-weight: 500; }
 .cap { padding: 12px 6px 6px; text-align: center; }
@@ -182,7 +186,10 @@ svg.i { width: 1em; height: 1em; fill: currentColor; flex: none; }
 @media (max-width: 560px) {
   .lk .lbl { display: none; }
   .lk { padding: 0 10px; }
-  .pb.hide-s { display: none; }
+  .pb { width: 40px; height: 40px; }
+  .now .mini { display: none; }
+  .now { padding-left: 14px; }
+  .now .prog { left: 14px; }
 }
 @media (min-width: 900px) {
   .stage { height: min(500px, 52dvh); }
@@ -218,7 +225,7 @@ svg.i { width: 1em; height: 1em; fill: currentColor; flex: none; }
 <div class="bar" id="bar" hidden>
   <div class="bar-in">
     <button class="pb" id="prev" type="button" aria-label="Música anterior"></button>
-    <button class="pb hide-s" id="list" type="button" aria-label="Lista de músicas"></button>
+    <button class="pb play" id="play" type="button" aria-label="Tocar"></button>
     <button class="pb" id="next" type="button" aria-label="Próxima música"></button>
     <div class="now" id="now"></div>
     <div class="links" id="links"></div>
@@ -237,7 +244,7 @@ svg.i { width: 1em; height: 1em; fill: currentColor; flex: none; }
 const SHEET_ID = "1UUcfkqzARSFsYahlaAvpDdeVIa9WhOvR_9NknEPz6Cc";
 const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 // Ícones Phosphor (MIT), paths copiados do pacote @phosphor-icons/core 2.1.1
-const ICONS = {"play-fill": ["M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"], "skip-back-fill": ["M208,47.88V208.12a16,16,0,0,1-24.43,13.43L64,146.77V216a8,8,0,0,1-16,0V40a8,8,0,0,1,16,0v69.23L183.57,34.45A15.95,15.95,0,0,1,208,47.88Z"], "skip-forward-fill": ["M208,40V216a8,8,0,0,1-16,0V146.77L72.43,221.55A15.95,15.95,0,0,1,48,208.12V47.88A15.95,15.95,0,0,1,72.43,34.45L192,109.23V40a8,8,0,0,1,16,0Z"], "list-bullets": ["M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"], "calendar-blank": ["M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"], "music-notes": ["M212.92,17.69a8,8,0,0,0-6.86-1.45l-128,32A8,8,0,0,0,72,56V166.08A36,36,0,1,0,88,196V110.25l112-28v51.83A36,36,0,1,0,216,164V24A8,8,0,0,0,212.92,17.69ZM52,216a20,20,0,1,1,20-20A20,20,0,0,1,52,216ZM88,93.75V62.25l112-28v31.5ZM180,184a20,20,0,1,1,20-20A20,20,0,0,1,180,184Z"], "youtube-logo-fill": ["M234.33,69.52a24,24,0,0,0-14.49-16.4C185.56,39.88,131,40,128,40s-57.56-.12-91.84,13.12a24,24,0,0,0-14.49,16.4C19.08,79.5,16,97.74,16,128s3.08,48.5,5.67,58.48a24,24,0,0,0,14.49,16.41C69,215.56,120.4,216,127.34,216h1.32c6.94,0,58.37-.44,91.18-13.11a24,24,0,0,0,14.49-16.41c2.59-10,5.67-28.22,5.67-58.48S236.92,79.5,234.33,69.52Zm-73.74,65-40,28A8,8,0,0,1,108,156V100a8,8,0,0,1,12.59-6.55l40,28a8,8,0,0,1,0,13.1Z"], "arrow-clockwise": ["M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"], "magnifying-glass": ["M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"], "microphone-stage": ["M168,16A72.07,72.07,0,0,0,96,88a73.29,73.29,0,0,0,.63,9.42L27.12,192.22A15.93,15.93,0,0,0,28.71,213L43,227.29a15.93,15.93,0,0,0,20.78,1.59l94.81-69.53A73.29,73.29,0,0,0,168,160a72,72,0,1,0,0-144Zm56,72a55.72,55.72,0,0,1-11.16,33.52L134.49,43.16A56,56,0,0,1,224,88ZM54.32,216,40,201.68,102.14,117A72.37,72.37,0,0,0,139,153.86ZM112,88a55.67,55.67,0,0,1,11.16-33.51l78.34,78.34A56,56,0,0,1,112,88Zm-2.35,58.34a8,8,0,0,1,0,11.31l-8,8a8,8,0,1,1-11.31-11.31l8-8A8,8,0,0,1,109.67,146.33Z"], "x": ["M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"], "pencil-simple": ["M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"], "caret-left": ["M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"], "caret-right": ["M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"]};
+const ICONS = {"play-fill": ["M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"], "skip-back-fill": ["M208,47.88V208.12a16,16,0,0,1-24.43,13.43L64,146.77V216a8,8,0,0,1-16,0V40a8,8,0,0,1,16,0v69.23L183.57,34.45A15.95,15.95,0,0,1,208,47.88Z"], "skip-forward-fill": ["M208,40V216a8,8,0,0,1-16,0V146.77L72.43,221.55A15.95,15.95,0,0,1,48,208.12V47.88A15.95,15.95,0,0,1,72.43,34.45L192,109.23V40a8,8,0,0,1,16,0Z"], "list-bullets": ["M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"], "calendar-blank": ["M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"], "music-notes": ["M212.92,17.69a8,8,0,0,0-6.86-1.45l-128,32A8,8,0,0,0,72,56V166.08A36,36,0,1,0,88,196V110.25l112-28v51.83A36,36,0,1,0,216,164V24A8,8,0,0,0,212.92,17.69ZM52,216a20,20,0,1,1,20-20A20,20,0,0,1,52,216ZM88,93.75V62.25l112-28v31.5ZM180,184a20,20,0,1,1,20-20A20,20,0,0,1,180,184Z"], "youtube-logo-fill": ["M234.33,69.52a24,24,0,0,0-14.49-16.4C185.56,39.88,131,40,128,40s-57.56-.12-91.84,13.12a24,24,0,0,0-14.49,16.4C19.08,79.5,16,97.74,16,128s3.08,48.5,5.67,58.48a24,24,0,0,0,14.49,16.41C69,215.56,120.4,216,127.34,216h1.32c6.94,0,58.37-.44,91.18-13.11a24,24,0,0,0,14.49-16.41c2.59-10,5.67-28.22,5.67-58.48S236.92,79.5,234.33,69.52Zm-73.74,65-40,28A8,8,0,0,1,108,156V100a8,8,0,0,1,12.59-6.55l40,28a8,8,0,0,1,0,13.1Z"], "arrow-clockwise": ["M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"], "magnifying-glass": ["M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"], "microphone-stage": ["M168,16A72.07,72.07,0,0,0,96,88a73.29,73.29,0,0,0,.63,9.42L27.12,192.22A15.93,15.93,0,0,0,28.71,213L43,227.29a15.93,15.93,0,0,0,20.78,1.59l94.81-69.53A73.29,73.29,0,0,0,168,160a72,72,0,1,0,0-144Zm56,72a55.72,55.72,0,0,1-11.16,33.52L134.49,43.16A56,56,0,0,1,224,88ZM54.32,216,40,201.68,102.14,117A72.37,72.37,0,0,0,139,153.86ZM112,88a55.67,55.67,0,0,1,11.16-33.51l78.34,78.34A56,56,0,0,1,112,88Zm-2.35,58.34a8,8,0,0,1,0,11.31l-8,8a8,8,0,1,1-11.31-11.31l8-8A8,8,0,0,1,109.67,146.33Z"], "x": ["M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"], "pencil-simple": ["M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"], "caret-left": ["M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"], "caret-right": ["M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"], "pause-fill": ["M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z"]};
 const ico = n => `<svg class="i" viewBox="0 0 256 256" aria-hidden="true">${ICONS[n].map(d => `<path d="${d}"/>`).join("")}</svg>`;
 
 const $ = s => document.querySelector(s);
@@ -511,12 +518,75 @@ function setBg(title) {
 
 function go(i) {
   const e = state.events[state.ev]; if (!e) return;
-  state.song = Math.max(0, Math.min(e.songs.length - 1, i));
+  const next = Math.max(0, Math.min(e.songs.length - 1, i));
+  if (next === state.song) return;
+  state.song = next;
   layout();
+  if (player.on) playCurrent();
 }
 function selectEvent(i, song = 0) {
+  stopPlayer();
   state.ev = i; state.song = song;
   renderEvents(); renderStage();
+}
+
+/* player do YouTube dentro da capa da música atual */
+const player = { on: false, yt: null, paused: false, api: null };
+function loadApi() {
+  if (player.api) return player.api;
+  player.api = new Promise(resolve => {
+    window.onYouTubeIframeAPIReady = () => resolve(window.YT);
+    const sc = document.createElement("script");
+    sc.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(sc);
+  });
+  return player.api;
+}
+function setPlayIcon() {
+  const playing = player.on && !player.paused;
+  $("#play").innerHTML = ico(playing ? "pause-fill" : "play-fill");
+  $("#play").setAttribute("aria-label", playing ? "Pausar" : "Tocar");
+}
+function stopPlayer() {
+  if (player.yt) { try { player.yt.destroy(); } catch (_) {} }
+  player.yt = null; player.on = false; player.paused = false;
+  document.querySelectorAll(".art .video").forEach(v => v.remove());
+  setPlayIcon();
+}
+async function playCurrent() {
+  const e = state.events[state.ev], idx = state.song, s = e && e.songs[idx];
+  if (!s) return;
+  if (player.yt) { try { player.yt.destroy(); } catch (_) {} player.yt = null; }
+  document.querySelectorAll(".art .video").forEach(v => v.remove());
+  player.on = true; player.paused = false; setPlayIcon();
+  await resolveYt([s]);
+  const id = ytId(s);
+  if (!id) { player.on = false; setPlayIcon(); window.open(ytURL(s), "_blank", "noopener"); return; }
+  const YT = await loadApi();
+  if (!player.on || state.events[state.ev] !== e || state.song !== idx) return;
+  const art = document.querySelector(`.card[data-i="${idx}"] .art`);
+  if (!art) return;
+  const box = document.createElement("div"); box.className = "video";
+  const slot = document.createElement("div"); box.appendChild(slot); art.appendChild(box);
+  player.yt = new YT.Player(slot, {
+    videoId: id, width: "100%", height: "100%",
+    playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
+    events: {
+      onReady: ev => ev.target.playVideo(),
+      onStateChange: ev => {
+        if (ev.data === YT.PlayerState.PLAYING) { player.paused = false; setPlayIcon(); }
+        if (ev.data === YT.PlayerState.PAUSED) { player.paused = true; setPlayIcon(); }
+        if (ev.data === YT.PlayerState.ENDED) {
+          if (state.song < e.songs.length - 1) go(state.song + 1); else stopPlayer();
+        }
+      },
+    },
+  });
+}
+function togglePlay() {
+  if (!player.on) return playCurrent();
+  if (!player.yt || !player.yt.getPlayerState) return;
+  if (player.paused) player.yt.playVideo(); else player.yt.pauseVideo();
 }
 
 /* painel */
@@ -615,7 +685,8 @@ async function load(first) {
     state.agenda = tabs.flatMap(t => t.agenda);
     const keep = state.events.findIndex(e => e.name === prev);
     if (!first && keep >= 0) { state.ev = keep; state.song = prevSong; } else { state.ev = pickDefault(state.events); state.song = 0; }
-    renderEvents(); renderStage();
+    renderEvents();
+    if (!player.on) renderStage();
     if (state.sheet) renderSheet();
     $("#status").textContent = window.IS_SNAPSHOT ? "Prévia com os dados de 23/10" : "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     try { localStorage.setItem("louvor-cache-v3", JSON.stringify({ events: state.events, agenda: state.agenda })); } catch (_) {}
@@ -632,13 +703,13 @@ $("#refresh").innerHTML = ico("arrow-clockwise");
 $("#close").innerHTML = ico("x");
 $("#prev").innerHTML = ico("skip-back-fill");
 $("#next").innerHTML = ico("skip-forward-fill");
-$("#list").innerHTML = ico("list-bullets");
+$("#play").innerHTML = ico("play-fill");
 
 /* eventos de interface */
 $("#events").addEventListener("click", ev => { const b = ev.target.closest(".ev"); if (b) selectEvent(+b.dataset.i); });
 $("#prev").addEventListener("click", () => go(state.song - 1));
 $("#next").addEventListener("click", () => go(state.song + 1));
-$("#list").addEventListener("click", () => openSheet("list"));
+$("#play").addEventListener("click", togglePlay);
 $("#now").addEventListener("click", () => openSheet("list"));
 $("#btnSearch").addEventListener("click", () => openSheet("search"));
 $("#btnAgenda").addEventListener("click", () => openSheet("agenda"));
