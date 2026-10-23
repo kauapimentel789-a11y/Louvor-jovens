@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Louvor Jovens · Ensaios</title>
+<meta name="theme-color" content="#16131f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: cabeçalho com chips dos eventos; cada evento é um "setlist" com faixas numeradas */
+:root {
+  --bg: #f5f3fa;
+  --surface: #ffffff;
+  --surface-2: #ece8f5;
+  --fg: #1c1828;
+  --muted: #6b6480;
+  --line: #ddd7ea;
+  --accent: #6a3fd6;
+  --accent-soft: #e7defc;
+  --gold: #c9871a;
+  --ok: #1f8a55;      --ok-bg: #dcf3e6;
+  --warn: #b26a00;    --warn-bg: #fdecd0;
+  --bad: #c2352f;     --bad-bg: #fbdedc;
+  --info: #2c62c9;    --info-bg: #dde8fb;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius: 14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16131f; --surface: #201c2c; --surface-2: #2a2539; --fg: #f1edf9; --muted: #a59dbb; --line: #352f47;
+    --accent: #a98bff; --accent-soft: #33295a; --gold: #f0b24a;
+    --ok: #5fd39a; --ok-bg: #173a2a; --warn: #f5b456; --warn-bg: #3d2c12; --bad: #ff8a80; --bad-bg: #44201f; --info: #8fb4ff; --info-bg: #1d2c4c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16131f; --surface: #201c2c; --surface-2: #2a2539; --fg: #f1edf9; --muted: #a59dbb; --line: #352f47;
+  --accent: #a98bff; --accent-soft: #33295a; --gold: #f0b24a;
+  --ok: #5fd39a; --ok-bg: #173a2a; --warn: #f5b456; --warn-bg: #3d2c12; --bad: #ff8a80; --bad-bg: #44201f; --info: #8fb4ff; --info-bg: #1d2c4c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 16px/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.wrap {
+  max-width: 760px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header.top { padding-block: 28px 8px; }
+.eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-bg); }
+.eyebrow .dot.off { background: var(--muted); box-shadow: none; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 46px); line-height: 1.02; letter-spacing: -.02em; margin: 6px 0 4px; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--accent); }
+.sub { color: var(--muted); margin: 0; }
+.tools { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+.btn {
+  appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  border-radius: 999px; padding: 8px 14px; font: 600 14px var(--font-body); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible, .chip:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn svg { width: 16px; height: 16px; }
+.btn.spin svg { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* barra fixa com eventos e busca */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  border-radius: 12px; padding: 7px 12px; cursor: pointer; text-align: left; font-family: var(--font-body);
+  display: grid; gap: 0; line-height: 1.2;
+}
+.chip b { font-size: 14px; font-weight: 700; }
+.chip small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip[aria-pressed="true"] small { color: inherit; opacity: .75; }
+.chip .next { color: var(--gold); font-weight: 700; }
+.filters { display: flex; gap: 8px; margin-top: 10px; }
+.filters input, .filters select {
+  min-width: 0; flex: 1; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  border-radius: 10px; padding: 9px 12px; font: 15px var(--font-body);
+}
+.filters select { flex: 0 1 40%; }
+
+main { padding-block: 18px 48px; display: grid; gap: 28px; }
+.event-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.event-head h2 { font-family: var(--font-display); font-weight: 700; font-size: 24px; margin: 0; letter-spacing: -.01em; }
+.kind { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--accent); display: block; margin-bottom: 2px; }
+.when { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.when .badge-old { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-weight: 700; font-size: 12px; margin-left: 6px; }
+.summary { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+
+.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.song { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 14px 14px 14px 10px; border-top: 1px solid var(--line); }
+.song:first-child { border-top: 0; }
+.num { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; line-height: 1.25; opacity: .7; }
+.body { min-width: 0; display: grid; gap: 6px; }
+.title { font-weight: 700; font-size: 17px; line-height: 1.3; margin: 0; }
+.title .medley { display: block; }
+.title .medley + .medley::before { content: "↳ "; color: var(--muted); font-weight: 500; }
+.artist { color: var(--muted); font-size: 14px; margin: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.voice { background: var(--surface-2); border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; border: 0; color: var(--fg); font-family: var(--font-body); }
+.voice svg { width: 12px; height: 12px; opacity: .6; }
+.status { border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+.s-ok { background: var(--ok-bg); color: var(--ok); }
+.s-warn { background: var(--warn-bg); color: var(--warn); }
+.s-bad { background: var(--bad-bg); color: var(--bad); }
+.s-info { background: var(--info-bg); color: var(--info); }
+.s-none { background: var(--surface-2); color: var(--muted); }
+.links { display: flex; gap: 14px; font-size: 13px; }
+.links a { color: var(--accent); font-weight: 600; text-decoration: none; display: inline-flex; gap: 4px; align-items: center; }
+.links a:hover { text-decoration: underline; }
+.links svg { width: 14px; height: 14px; }
+
+.empty, .error { text-align: center; color: var(--muted); padding: 40px 16px; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); }
+.error b { color: var(--bad); display: block; margin-bottom: 4px; }
+.skel { height: 72px; border-radius: 10px; background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: sh 1.2s infinite; }
+@keyframes sh { to { background-position: -200% 0; } }
+footer { color: var(--muted); font-size: 13px; padding-block: 0 32px; }
+footer a { color: inherit; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+@media (min-width: 640px) {
+  .song { grid-template-columns: 52px 1fr; padding: 16px 18px 16px 12px; }
+  .num { font-size: 26px; }
+}
+.s-new { background: var(--accent-soft); color: var(--accent); }
+.month { flex: none; align-self: center; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--muted); padding: 0 2px 0 6px; }
+.chip.agenda { border-color: var(--accent); }
+.note { margin: 0 0 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; color: var(--fg); }
+.badge { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-weight: 700; font-size: 12px; margin-left: 6px; white-space: nowrap; }
+.meet { display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 14px; border-top: 1px solid var(--line); }
+.meet:first-child { border-top: 0; }
+.meet.past { opacity: .55; }
+.day { display: grid; justify-items: center; align-content: start; line-height: 1; }
+.day b { font-family: var(--font-display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; }
+.day small { text-transform: uppercase; font-size: 11px; letter-spacing: .1em; color: var(--muted); font-weight: 700; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow"><span class="dot off" id="live"></span><span id="status">Carregando planilha…</span></div>
+    <h1 id="sheetTitle">Louvor <em>Jovens</em></h1>
+    <p class="sub" id="sheetSub">Músicas dos ensaios e cultos</p>
+    <div class="tools">
+      <button class="btn" id="refresh" type="button" aria-label="Atualizar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>Atualizar
+      </button>
+      <a class="btn" id="openSheet" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Editar planilha
+      </a>
+    </div>
+  </header>
+</div>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="chips" id="chips" role="toolbar" aria-label="Eventos"></div>
+    <div class="filters">
+      <input id="q" type="search" placeholder="Buscar música ou autor" aria-label="Buscar música ou autor">
+      <select id="voz" aria-label="Filtrar por voz"><option value="">Todas as vozes</option></select>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <main id="main">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </main>
+  <footer>Os dados vêm direto da planilha do Google. Edite lá e toque em <b>Atualizar</b>.</footer>
+</div>
+
+<script>
+const SHEET_ID = "1UUcfkqzARSFsYahlaAvpDdeVIa9WhOvR_9NknEPz6Cc";
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+document.getElementById("openSheet").href = SHEET_URL;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
+const state = { events: [], agenda: [], selected: null, q: "", voz: "" };
+
+function parseCSV(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (c === '"') q = false;
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.map(r => r.map(c => c.trim()));
+}
+
+function kindOf(name) {
+  const n = norm(name);
+  if (n.includes("ensaio")) return "Ensaio";
+  if (n.includes("culto")) return "Culto";
+  if (n.includes("seminario")) return "Seminário";
+  if (n.includes("precisar") || n.includes("reserva")) return "Reserva";
+  if (n.includes("organiza")) return "Organização";
+  return "Evento";
+}
+const DATE_NUM = /(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/;
+const DATE_TXT = new RegExp(`(\\d{1,2})\\s+de\\s+(${MONTHS.map(norm).join("|")})(?:\\s+de\\s+(\\d{4}))?`);
+function dateOf(name, year) {
+  let m = name.match(DATE_NUM);
+  if (m) { let y = m[3] ? +m[3] : year; if (y < 100) y += 2000; return new Date(y, +m[2] - 1, +m[1]); }
+  m = norm(name).match(DATE_TXT);
+  if (m) return new Date(m[3] ? +m[3] : year, MONTHS.map(norm).indexOf(m[2]), +m[1]);
+  return null;
+}
+function cleanName(name) {
+  const t = name.replace(DATE_NUM, "").replace(new RegExp(`\\d{1,2}\\s+de\\s+(${MONTHS.join("|")})(\\s+de\\s+\\d{4})?`, "i"), "")
+    .replace(/\s{2,}/g, " ").replace(/[-–:]\s*$/, "").trim();
+  return t === t.toUpperCase() ? cap(t.toLowerCase()) : cap(t);
+}
+
+// Cada aba tem: título do mês, uma agenda opcional ("Encontros") e blocos de evento
+// (linha com o nome do evento, cabeçalho N°/Música/... e as músicas ou um aviso).
+function parseTab(rows, tab) {
+  const events = [], agenda = [];
+  let title = "", cols = null, cur = null, pending = null, inAgenda = false;
+  const year = +((rows.flat().join(" ").match(/20\d{2}/) || [])[0] || new Date().getFullYear());
+  const startEvent = name => {
+    const e = { name, tab, songs: [], notes: [], kind: kindOf(name), date: dateOf(name, year) };
+    e.label = cleanName(name) || e.kind;
+    return e;
+  };
+  for (const r of rows) {
+    const f = r.filter(Boolean);
+    if (!f.length) continue;
+    const lower = r.map(norm);
+    const iMus = lower.findIndex(c => c === "musica" || c === "musicas");
+    if (iMus >= 0) {
+      inAgenda = false;
+      cols = {
+        n: lower.findIndex(c => c.startsWith("n") && c.length <= 3),
+        musica: iMus,
+        autor: lower.findIndex(c => c.includes("autor") || c.includes("banda") || c.includes("artista")),
+        voz: lower.findIndex(c => c.startsWith("voz") || c.includes("vocal")),
+        obs: lower.findIndex(c => c.startsWith("obs")),
+        tom: lower.findIndex(c => c === "tom"),
+        link: lower.findIndex(c => c.includes("link") || c.includes("cifra") || c.includes("youtube")),
+      };
+      cur = startEvent(pending || "Músicas"); events.push(cur); pending = null;
+      continue;
+    }
+    if (f.length === 1 && !title && !events.length && !pending && !inAgenda && !agenda.length) { title = f[0]; continue; }
+    if (f.length === 1 && /^(encontros|agenda|programa)/.test(norm(f[0]))) { inAgenda = true; cur = null; continue; }
+    if (inAgenda && DATE_NUM.test(r[0])) {
+      const d = dateOf(r[0], year);
+      agenda.push({ date: d, raw: r[0], what: r[1] || "", where: r[2] || "", time: r[3] || "", note: r.slice(4).filter(Boolean).join(" · "), tab });
+      continue;
+    }
+    if (f.length === 1) {
+      if (cur && cols && cur.songs.length === 0 && !dateOf(f[0], year) && !/^(culto|ensaio|evento|seminario|louvor)/.test(norm(f[0]))) { cur.notes.push(f[0]); continue; }
+      inAgenda = false; pending = f[0]; cur = null; continue;
+    }
+    if (cur && cols && r[cols.musica]) {
+      const g = k => (cols[k] >= 0 ? r[cols[k]] : "") || "";
+      cur.songs.push({ n: g("n"), musica: g("musica"), autor: g("autor"), voz: g("voz"), obs: g("obs"), tom: g("tom"), link: g("link") });
+    } else if (cur && f.length > 1 && cols && !r[cols.musica] && cur.songs.length === 0) {
+      cur.notes.push(f.join(" · "));
+    }
+  }
+  return { title, events: events.filter(e => e.songs.length || e.notes.length), agenda };
+}
+
+function statusClass(obs) {
+  const o = norm(obs);
+  if (!o) return "s-none";
+  if (o === "ok" || o.includes("pronto") || o.includes("fechad")) return "s-ok";
+  if (o.includes("nao ensai") || o.includes("falta")) return "s-bad";
+  if (o.includes("nova") || o.includes("novo")) return "s-new";
+  if (o.includes("mais") || o.includes("ultimo") || o.includes("atencao")) return "s-warn";
+  return "s-info";
+}
+const voices = v => v.split(/[\/,&]| e /).map(s => s.trim()).filter(Boolean);
+const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const fmtDate = d => d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }).replace(/\./g, "");
+const fmtShort = d => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+function relDays(d) {
+  const diff = Math.round((d - today()) / 864e5);
+  if (diff === 0) return "Hoje"; if (diff === 1) return "Amanhã";
+  if (diff > 1 && diff < 14) return `Em ${diff} dias`;
+  return "";
+}
+function nextEventIndex(events) {
+  const t = today();
+  let best = -1;
+  events.forEach((e, i) => { if (e.date && e.date >= t && (best < 0 || e.date < events[best].date)) best = i; });
+  return best;
+}
+function pickDefault(events) {
+  const n = nextEventIndex(events);
+  if (n >= 0) return n;
+  let best = -1;
+  events.forEach((e, i) => { if (e.date && (best < 0 || e.date > events[best].date)) best = i; });
+  return best >= 0 ? best : 0;
+}
+
+const ICON_YT = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_CIFRA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>';
+
+function songHTML(s, i) {
+  const parts = s.musica.split("/").map(p => p.trim()).filter(Boolean);
+  const firstAuthor = s.autor.split(/[\/,]/)[0].trim();
+  const query = encodeURIComponent(`${parts[0]} ${firstAuthor}`.trim());
+  const yt = s.link && /^https?:/i.test(s.link) ? s.link : `https://www.youtube.com/results?search_query=${query}`;
+  return `<li class="song">
+    <div class="num">${esc(s.n || i + 1)}</div>
+    <div class="body">
+      <p class="title">${parts.map(p => `<span class="medley">${esc(p)}</span>`).join("")}</p>
+      ${s.autor ? `<p class="artist">${esc(s.autor)}</p>` : ""}
+      <div class="meta">
+        ${voices(s.voz).map(v => `<button type="button" class="voice" data-voz="${esc(v)}">${ICON_MIC}${esc(v)}</button>`).join("")}
+        ${s.tom ? `<span class="status s-none">Tom ${esc(s.tom)}</span>` : ""}
+        ${s.obs ? `<span class="status ${statusClass(s.obs)}">${esc(cap(s.obs))}</span>` : ""}
+      </div>
+      <div class="links">
+        <a href="${esc(yt)}" target="_blank" rel="noopener">${ICON_YT}Ouvir</a>
+        <a href="https://www.cifraclub.com.br/?q=${query}" target="_blank" rel="noopener">${ICON_CIFRA}Cifra</a>
+      </div>
+    </div>
+  </li>`;
+}
+
+function renderChips() {
+  const nextIdx = nextEventIndex(state.events);
+  let lastTab = null, html = "";
+  if (state.agenda.length) html += `<button type="button" class="chip agenda" data-i="agenda" aria-pressed="${state.selected === "agenda" && !state.q && !state.voz}"><b>Agenda</b><small>${state.agenda.length} encontros</small></button>`;
+  state.events.forEach((e, i) => {
+    if (e.tab !== lastTab) { html += `<span class="month">${esc(cap(e.tab))}</span>`; lastTab = e.tab; }
+    html += `<button type="button" class="chip" data-i="${i}" aria-pressed="${state.selected === i && !state.q && !state.voz}">
+      <b>${esc(e.label)}</b>
+      <small>${i === nextIdx ? '<span class="next">Próximo · </span>' : ""}${e.date ? esc(fmtShort(e.date)) : `${e.songs.length} músicas`}</small>
+    </button>`;
+  });
+  $("#chips").innerHTML = html;
+  const sel = $(`.chip[data-i="${state.selected}"]`);
+  if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
+}
+
+function renderVoices() {
+  const all = new Map();
+  state.events.forEach(e => e.songs.forEach(s => voices(s.voz).forEach(v => all.set(norm(v), v))));
+  const opts = [...all.values()].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  $("#voz").innerHTML = `<option value="">Todas as vozes</option>` + opts.map(v => `<option value="${esc(norm(v))}">${esc(v)}</option>`).join("");
+  $("#voz").value = state.voz;
+}
+
+function eventHTML(e, songs) {
+  const counts = {};
+  songs.forEach(s => { if (s.obs) { const k = s.obs.toLowerCase(); counts[k] = (counts[k] || 0) + 1; } });
+  const rel = e.date ? relDays(e.date) : "";
+  const meet = e.date && state.agenda.find(a => a.date && +a.date === +e.date);
+  const when = [e.date ? fmtDate(e.date) : "", meet && meet.time, meet && meet.where].filter(Boolean).map(esc).join(" · ");
+  const count = songs.length ? `${songs.length} ${songs.length === 1 ? "música" : "músicas"}` : "";
+  return `<section>
+    <div class="event-head">
+      <div><span class="kind">${esc(e.kind)}</span><h2>${esc(e.label)}</h2></div>
+      <div class="when">${[when, count].filter(Boolean).join(" · ")}${rel ? `<span class="badge">${rel}</span>` : ""}</div>
+    </div>
+    ${meet && meet.note ? `<p class="note">${esc(meet.note)}</p>` : ""}
+    ${Object.keys(counts).length > 1 ? `<div class="summary">${Object.entries(counts).map(([k, n]) => `<span class="status ${statusClass(k)}">${n} · ${esc(cap(k))}</span>`).join("")}</div>` : ""}
+    ${e.notes.map(n => `<p class="note">${esc(n)}</p>`).join("")}
+    ${songs.length ? `<ol class="list">${songs.map(songHTML).join("")}</ol>` : ""}
+  </section>`;
+}
+
+function agendaHTML() {
+  const t = today();
+  const items = [...state.agenda].sort((a, b) => (a.date || 0) - (b.date || 0));
+  return `<section>
+    <div class="event-head"><div><span class="kind">Calendário</span><h2>Agenda</h2></div><div class="when">${items.length} encontros</div></div>
+    <ol class="list agenda-list">${items.map(a => {
+      const past = a.date && a.date < t;
+      const rel = a.date ? relDays(a.date) : "";
+      const ev = state.events.findIndex(e => e.date && a.date && +e.date === +a.date);
+      return `<li class="meet${past ? " past" : ""}">
+        <div class="day"><b>${a.date ? a.date.getDate() : esc(a.raw)}</b><small>${a.date ? esc(a.date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")) : ""}</small></div>
+        <div class="body">
+          <p class="title">${esc(a.what)}${rel ? ` <span class="badge">${rel}</span>` : ""}</p>
+          <p class="artist">${[a.date && cap(a.date.toLocaleDateString("pt-BR", { weekday: "long" })), a.time, a.where].filter(Boolean).map(esc).join(" · ")}</p>
+          ${a.note ? `<div class="meta"><span class="status s-warn">${esc(a.note)}</span></div>` : ""}
+          ${ev >= 0 ? `<div class="links"><a href="#" data-goto="${ev}">${ICON_CIFRA}Ver músicas</a></div>` : ""}
+        </div>
+      </li>`;
+    }).join("")}</ol>
+  </section>`;
+}
+
+function render() {
+  renderChips();
+  const main = $("#main");
+  if (!state.events.length && !state.agenda.length) { main.innerHTML = `<div class="empty">Nenhuma música encontrada na planilha.</div>`; return; }
+  const q = norm(state.q), vz = state.voz;
+  const match = s => (!q || norm(s.musica + " " + s.autor).includes(q)) && (!vz || voices(s.voz).some(v => norm(v) === vz));
+  let html;
+  if (q || vz) {
+    const order = state.events.map((e, i) => i).sort((a, b) => (state.events[b].date || 0) - (state.events[a].date || 0));
+    html = order.map(i => { const e = state.events[i]; const songs = e.songs.filter(match); return songs.length ? eventHTML(e, songs) : ""; }).join("");
+    if (!html) html = `<div class="empty">Nada encontrado para essa busca.</div>`;
+  } else if (state.selected === "agenda") {
+    html = agendaHTML();
+  } else {
+    const e = state.events[state.selected];
+    html = e ? eventHTML(e, e.songs) : "";
+  }
+  main.innerHTML = html;
+}
+
+async function fetchTab(name) {
+  try {
+    const r = await fetch(`/api/sheet?sheet=${encodeURIComponent(name)}`, { cache: "no-store" });
+    if (r.ok && /csv/.test(r.headers.get("content-type") || "")) return await r.text();
+  } catch (_) {}
+  try {
+    const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(name)}`, { cache: "no-store" });
+    if (r.ok) return await r.text();
+  } catch (_) {}
+  if (window.EMBED_TABS && window.EMBED_TABS[name]) { window.IS_SNAPSHOT = true; return window.EMBED_TABS[name]; }
+  return null;
+}
+
+// Procura uma aba para cada mês. Abas que não existem fazem o Google devolver a primeira aba,
+// então só aceitamos a resposta se o título dela citar o mês procurado.
+async function fetchAll() {
+  const names = window.EMBED_TABS && location.protocol !== "https:" ? Object.keys(window.EMBED_TABS) : MONTHS;
+  const results = await Promise.all(names.map(async m => {
+    const csv = await fetchTab(m);
+    if (!csv) return null;
+    const rows = parseCSV(csv);
+    const head = norm(rows.slice(0, 3).flat().join(" "));
+    if (!head.includes(norm(m))) return null;
+    return parseTab(rows, m);
+  }));
+  const tabs = results.filter(Boolean);
+  if (!tabs.length) throw new Error("Não foi possível ler a planilha");
+  return tabs;
+}
+
+async function load(first) {
+  const btn = $("#refresh"); btn.classList.add("spin");
+  try {
+    const tabs = await fetchAll();
+    const prev = state.selected === "agenda" ? "agenda" : state.events[state.selected]?.name;
+    state.events = tabs.flatMap(t => t.events);
+    state.agenda = tabs.flatMap(t => t.agenda);
+    const keep = prev === "agenda" ? "agenda" : state.events.findIndex(e => e.name === prev);
+    state.selected = !first && (keep === "agenda" || keep >= 0) ? keep : pickDefault(state.events);
+    renderVoices(); render();
+    $("#live").classList.remove("off");
+    $("#status").textContent = window.IS_SNAPSHOT ? "Prévia com os dados de 23/10" : "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    try { localStorage.setItem("louvor-cache-v2", JSON.stringify({ events: state.events, agenda: state.agenda })); } catch (_) {}
+  } catch (err) {
+    $("#live").classList.add("off");
+    $("#status").textContent = "Sem conexão com a planilha";
+    if (!state.events.length) $("#main").innerHTML = `<div class="error"><b>Não consegui carregar a planilha.</b>Confira se ela está compartilhada como "Qualquer pessoa com o link" e tente de novo.</div>`;
+  } finally { btn.classList.remove("spin"); }
+}
+
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  state.selected = b.dataset.i === "agenda" ? "agenda" : +b.dataset.i;
+  state.q = ""; state.voz = ""; $("#q").value = ""; $("#voz").value = "";
+  render(); window.scrollTo({ top: 0, behavior: "smooth" });
+});
+$("#q").addEventListener("input", e => { state.q = e.target.value; render(); });
+$("#voz").addEventListener("change", e => { state.voz = e.target.value; render(); });
+$("#main").addEventListener("click", e => {
+  const g = e.target.closest("[data-goto]");
+  if (g) { e.preventDefault(); state.selected = +g.dataset.goto; render(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+  const v = e.target.closest(".voice"); if (!v) return;
+  state.voz = norm(v.dataset.voz); $("#voz").value = state.voz; render();
+});
+$("#refresh").addEventListener("click", () => load(false));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(false); });
+
+// Mostra a última versão salva enquanto busca a nova
+try {
+  const c = JSON.parse(localStorage.getItem("louvor-cache-v2") || "null");
+  if (c && c.events) {
+    c.events.forEach(e => e.date = e.date ? new Date(e.date) : null);
+    c.agenda.forEach(a => a.date = a.date ? new Date(a.date) : null);
+    state.events = c.events; state.agenda = c.agenda; state.selected = pickDefault(c.events);
+    renderVoices(); render();
+  }
+} catch (_) {}
+load(true);
+setInterval(() => { if (!document.hidden) load(false); }, 5 * 60000);
+</script>
+</body>
+</html>
