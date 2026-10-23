@@ -3,202 +3,246 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Louvor Jovens · Ensaios</title>
-<meta name="theme-color" content="#16131f">
+<title>Louvor Jovens</title>
+<meta name="theme-color" content="#120c08">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: cabeçalho com chips dos eventos; cada evento é um "setlist" com faixas numeradas */
+/* Visual de player: carrossel de capas em vidro sobre um fundo desfocado que muda de cor com a música.
+   Tema escuro único, escolhido de propósito (como num app de música). Vidro = aproximação web com backdrop-filter. */
+@property --c1 { syntax: "<color>"; inherits: true; initial-value: #b8661c; }
+@property --c2 { syntax: "<color>"; inherits: true; initial-value: #5a2410; }
 :root {
-  --bg: #f5f3fa;
-  --surface: #ffffff;
-  --surface-2: #ece8f5;
-  --fg: #1c1828;
-  --muted: #6b6480;
-  --line: #ddd7ea;
-  --accent: #6a3fd6;
-  --accent-soft: #e7defc;
-  --gold: #c9871a;
-  --ok: #1f8a55;      --ok-bg: #dcf3e6;
-  --warn: #b26a00;    --warn-bg: #fdecd0;
-  --bad: #c2352f;     --bad-bg: #fbdedc;
-  --info: #2c62c9;    --info-bg: #dde8fb;
-  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --radius: 14px;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #16131f; --surface: #201c2c; --surface-2: #2a2539; --fg: #f1edf9; --muted: #a59dbb; --line: #352f47;
-    --accent: #a98bff; --accent-soft: #33295a; --gold: #f0b24a;
-    --ok: #5fd39a; --ok-bg: #173a2a; --warn: #f5b456; --warn-bg: #3d2c12; --bad: #ff8a80; --bad-bg: #44201f; --info: #8fb4ff; --info-bg: #1d2c4c;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #16131f; --surface: #201c2c; --surface-2: #2a2539; --fg: #f1edf9; --muted: #a59dbb; --line: #352f47;
-  --accent: #a98bff; --accent-soft: #33295a; --gold: #f0b24a;
-  --ok: #5fd39a; --ok-bg: #173a2a; --warn: #f5b456; --warn-bg: #3d2c12; --bad: #ff8a80; --bad-bg: #44201f; --info: #8fb4ff; --info-bg: #1d2c4c;
+  --ink: #120c08;
+  --fg: #fbf3ea;
+  --muted: rgb(251 243 234 / .62);
+  --faint: rgb(251 243 234 / .14);
+  --glass: rgb(255 240 225 / .10);
+  --glass-strong: rgb(30 18 10 / .55);
+  --edge: rgb(255 240 225 / .22);
+  --accent: #ffb054;
+  --ok: #7be0a6; --warn: #ffc670; --bad: #ff8f80; --new: #ffb054;
+  --font: "Geist", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r: 22px;
   color-scheme: dark;
+  transition: --c1 .9s ease, --c2 .9s ease;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; }
+html, body { margin: 0; height: 100%; }
 body {
-  background: var(--bg); color: var(--fg);
-  font: 16px/1.5 var(--font-body);
-  -webkit-font-smoothing: antialiased;
+  background: var(--ink); color: var(--fg); font: 15px/1.45 var(--font);
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+button { font: inherit; color: inherit; }
+svg.i { width: 1em; height: 1em; fill: currentColor; flex: none; }
+
+/* fundo */
+.bg { position: fixed; inset: -10%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(40% 45% at 30% 30%, var(--c1), transparent 70%),
+    radial-gradient(45% 50% at 75% 70%, var(--c2), transparent 70%),
+    radial-gradient(60% 60% at 50% 45%, color-mix(in srgb, var(--c1) 55%, var(--ink)), var(--ink) 80%);
+  filter: blur(50px) saturate(1.1);
+}
+.bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(70% 60% at 50% 45%, transparent 30%, rgb(10 6 4 / .75)); }
+
+.app { position: relative; z-index: 1; overflow-x: clip; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr;
   padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.wrap {
-  max-width: 760px; margin: 0 auto;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-}
-header.top { padding-block: 28px 8px; }
-.eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-bg); }
-.eyebrow .dot.off { background: var(--muted); box-shadow: none; }
-h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 46px); line-height: 1.02; letter-spacing: -.02em; margin: 6px 0 4px; text-wrap: balance; }
-h1 em { font-style: normal; color: var(--accent); }
-.sub { color: var(--muted); margin: 0; }
-.tools { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
-.btn {
-  appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
-  border-radius: 999px; padding: 8px 14px; font: 600 14px var(--font-body); cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
-}
-.btn:hover { border-color: var(--accent); }
-.btn:focus-visible, .chip:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.btn svg { width: 16px; height: 16px; }
-.btn.spin svg { animation: spin .8s linear infinite; }
+  padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px)); }
+.wrap { width: 100%; max-width: 980px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* topo */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px 6px; }
+.brand { font-weight: 700; font-size: 20px; letter-spacing: -.02em; margin: 0; }
+.brand span { color: var(--muted); font-weight: 500; }
+.sync { font-size: 12px; color: var(--muted); display: block; font-weight: 500; letter-spacing: 0; }
+.icon-btn { width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; cursor: pointer;
+  background: var(--glass); border: 1px solid var(--edge); font-size: 18px;
+  backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .18); transition: transform .15s ease; }
+.icon-btn:active { transform: scale(.94); }
+.icon-btn.spin svg { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.top-actions { display: flex; gap: 8px; }
 
-/* barra fixa com eventos e busca */
-.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
-.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.chips::-webkit-scrollbar { display: none; }
-.chip {
-  flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
-  border-radius: 12px; padding: 7px 12px; cursor: pointer; text-align: left; font-family: var(--font-body);
-  display: grid; gap: 0; line-height: 1.2;
+/* eventos */
+.events { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-block: 10px 4px; scroll-snap-type: x proximity; }
+.events::-webkit-scrollbar { display: none; }
+.ev { flex: none; scroll-snap-align: center; cursor: pointer; text-align: left; border-radius: 999px; padding: 8px 14px;
+  background: rgb(255 240 225 / .07); border: 1px solid var(--faint); color: var(--muted); line-height: 1.15; }
+.ev b { display: block; color: var(--fg); font-weight: 600; font-size: 14px; }
+.ev small { font-size: 12px; font-variant-numeric: tabular-nums; }
+.ev[aria-pressed="true"] { background: var(--fg); color: rgb(18 12 8 / .7); border-color: var(--fg); }
+.ev[aria-pressed="true"] b { color: var(--ink); }
+.ev .nx { color: var(--accent); font-weight: 600; }
+.ev[aria-pressed="true"] .nx { color: #a3530a; }
+.mo { flex: none; align-self: center; font-size: 12px; color: var(--muted); padding: 0 4px 0 8px; font-weight: 500; }
+
+/* palco */
+.stage-wrap { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; gap: 18px; padding-block: 12px; }
+.stage { position: relative; overflow-x: clip; overflow-y: visible; height: min(118vw, 470px, 58dvh); perspective: 1200px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.card { position: absolute; left: 50%; top: 50%; width: min(64vw, 300px); margin-left: calc(min(64vw, 300px) / -2);
+  transform: translate(var(--x), -50%) scale(var(--s)); z-index: var(--z); opacity: var(--o);
+  transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .4s ease, filter .4s ease; cursor: pointer;
+  padding: 8px; border-radius: var(--r); background: linear-gradient(160deg, rgb(255 240 225 / .22), rgb(255 240 225 / .06));
+  border: 1px solid var(--edge); backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), 0 30px 60px rgb(10 5 2 / .45); filter: brightness(var(--b)); }
+.card.is-cur { cursor: default; }
+.art { position: relative; aspect-ratio: 1; border-radius: 15px; overflow: hidden; display: grid; align-content: end; padding: 14px;
+  background:
+    radial-gradient(120% 90% at 20% 10%, rgb(255 255 255 / .28), transparent 45%),
+    linear-gradient(150deg, var(--a1), var(--a2) 70%); }
+.art::before { content: attr(data-mono); position: absolute; right: -6%; top: -12%; font-size: 120px; font-weight: 700; letter-spacing: -.06em;
+  line-height: 1; color: rgb(255 255 255 / .13); }
+.art .nr { position: absolute; left: 14px; top: 12px; font-weight: 600; font-size: 13px; color: rgb(255 255 255 / .8); font-variant-numeric: tabular-nums; }
+.art .medley { position: relative; font-size: 13px; color: rgb(255 255 255 / .85); font-weight: 500; }
+.cap { padding: 12px 6px 6px; text-align: center; }
+.cap h3 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; text-wrap: balance;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cap p { margin: 2px 0 0; color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* detalhe da música atual */
+.detail { display: grid; justify-items: center; gap: 10px; text-align: center; min-height: 64px; }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.voz { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 11px; font-size: 13px; font-weight: 500;
+  background: rgb(255 240 225 / .09); border: 1px solid var(--faint); cursor: pointer; }
+.voz svg { opacity: .7; }
+.tag { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 11px; font-size: 13px; font-weight: 600; background: rgb(255 240 225 / .09); border: 1px solid var(--faint); }
+.tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; margin-right: 7px; }
+.t-ok { color: var(--ok); } .t-warn { color: var(--warn); } .t-bad { color: var(--bad); } .t-new { color: var(--new); } .t-info { color: var(--fg); }
+.when { color: var(--muted); font-size: 13px; }
+.when b { color: var(--fg); font-weight: 600; }
+.note { max-width: 520px; margin: 0 auto; padding: 22px; border-radius: var(--r); text-align: center; font-size: 16px;
+  background: var(--glass); border: 1px solid var(--edge); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+.note + .note { margin-top: 10px; }
+.note small { display: block; color: var(--muted); margin-bottom: 6px; font-size: 13px; }
+
+/* barra do player */
+.bar { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0;
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.bar-in { max-width: 860px; margin: 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px; border-radius: 999px;
+  background: linear-gradient(180deg, rgb(255 240 225 / .16), rgb(255 240 225 / .07)); border: 1px solid var(--edge);
+  backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .28), 0 20px 50px rgb(8 4 2 / .5); }
+.pb { width: 44px; height: 44px; border: 0; background: none; border-radius: 999px; display: grid; place-items: center; font-size: 20px; cursor: pointer; flex: none; }
+.pb:hover { background: rgb(255 240 225 / .1); }
+.pb:active { transform: scale(.92); }
+.pb:disabled { opacity: .3; cursor: default; }
+.now { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: rgb(18 10 6 / .55); position: relative; overflow: hidden; }
+.now .mini { width: 38px; height: 38px; border-radius: 10px; flex: none; background: linear-gradient(150deg, var(--a1), var(--a2)); display: grid; place-items: center; font-weight: 700; font-size: 14px; color: rgb(255 255 255 / .9); }
+.now .tx { min-width: 0; line-height: 1.2; }
+.now b { display: block; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now span { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.now .prog { position: absolute; left: 50px; right: 14px; bottom: 4px; height: 2px; border-radius: 2px; background: var(--faint); }
+.now .prog i { display: block; height: 100%; border-radius: 2px; background: var(--fg); width: var(--p); transition: width .4s ease; }
+.links { display: flex; gap: 2px; }
+.lk { height: 44px; padding: 0 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 14px; text-decoration: none; color: var(--fg); }
+.lk:hover { background: rgb(255 240 225 / .1); }
+.lk svg { font-size: 20px; }
+.sep { width: 1px; height: 24px; background: var(--faint); flex: none; }
+
+/* painel (lista / agenda / busca) */
+.sheet { position: fixed; inset: 0; z-index: 10; display: grid; align-items: end; background: rgb(8 4 2 / .45); }
+.sheet[hidden] { display: none; }
+.panel { width: 100%; max-width: 720px; margin: 0 auto; max-height: 84dvh; overflow: auto; overscroll-behavior: contain;
+  border-radius: 28px 28px 0 0; padding: 8px max(18px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+  background: rgb(36 22 13 / .82); border: 1px solid var(--edge); border-bottom: 0;
+  backdrop-filter: blur(30px) saturate(160%); -webkit-backdrop-filter: blur(30px) saturate(160%); animation: up .35s cubic-bezier(.2,.8,.2,1); }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } }
+.grab { width: 40px; height: 5px; border-radius: 9px; background: var(--faint); margin: 4px auto 10px; }
+.ph { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: -8px; padding-block: 6px 10px; background: inherit; }
+.ph h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+.find { display: flex; gap: 8px; margin-bottom: 12px; }
+.find input, .find select { min-width: 0; flex: 1; height: 44px; border-radius: 14px; padding: 0 14px; font: 15px var(--font); color: var(--fg);
+  background: rgb(255 240 225 / .08); border: 1px solid var(--faint); }
+.find input::placeholder { color: var(--muted); }
+.find select { flex: 0 1 38%; }
+.grp { font-size: 13px; color: var(--muted); margin: 16px 4px 6px; font-weight: 500; }
+.row { width: 100%; display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center; text-align: left;
+  padding: 8px; border-radius: 16px; background: none; border: 0; cursor: pointer; }
+.row:hover, .row.cur { background: rgb(255 240 225 / .08); }
+.row .mini { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-weight: 700; color: rgb(255 255 255 / .9); background: linear-gradient(150deg, var(--a1), var(--a2)); }
+.row b { display: block; font-weight: 600; }
+.row span { color: var(--muted); font-size: 13px; }
+.row .tag { padding: 3px 9px; font-size: 12px; }
+.meet .mini { flex-direction: column; line-height: 1; background: rgb(255 240 225 / .1); color: var(--fg); }
+.meet .mini small { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.meet.past { opacity: .5; }
+.empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+
+.skel { width: min(64vw, 300px); aspect-ratio: .82; margin: 40px auto; border-radius: var(--r); background: var(--glass); border: 1px solid var(--edge); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .5; } }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 560px) {
+  .lk .lbl { display: none; }
+  .lk { padding: 0 10px; }
+  .pb.hide-s { display: none; }
 }
-.chip b { font-size: 14px; font-weight: 700; }
-.chip small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.chip[aria-pressed="true"] small { color: inherit; opacity: .75; }
-.chip .next { color: var(--gold); font-weight: 700; }
-.filters { display: flex; gap: 8px; margin-top: 10px; }
-.filters input, .filters select {
-  min-width: 0; flex: 1; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
-  border-radius: 10px; padding: 9px 12px; font: 15px var(--font-body);
+@media (min-width: 900px) {
+  .stage { height: min(500px, 52dvh); }
 }
-.filters select { flex: 0 1 40%; }
-
-main { padding-block: 18px 48px; display: grid; gap: 28px; }
-.event-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-.event-head h2 { font-family: var(--font-display); font-weight: 700; font-size: 24px; margin: 0; letter-spacing: -.01em; }
-.kind { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--accent); display: block; margin-bottom: 2px; }
-.when { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
-.when .badge-old { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-weight: 700; font-size: 12px; margin-left: 6px; }
-.summary { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
-
-.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.song { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 14px 14px 14px 10px; border-top: 1px solid var(--line); }
-.song:first-child { border-top: 0; }
-.num { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; line-height: 1.25; opacity: .7; }
-.body { min-width: 0; display: grid; gap: 6px; }
-.title { font-weight: 700; font-size: 17px; line-height: 1.3; margin: 0; }
-.title .medley { display: block; }
-.title .medley + .medley::before { content: "↳ "; color: var(--muted); font-weight: 500; }
-.artist { color: var(--muted); font-size: 14px; margin: 0; }
-.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.voice { background: var(--surface-2); border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; border: 0; color: var(--fg); font-family: var(--font-body); }
-.voice svg { width: 12px; height: 12px; opacity: .6; }
-.status { border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 700; letter-spacing: .02em; }
-.s-ok { background: var(--ok-bg); color: var(--ok); }
-.s-warn { background: var(--warn-bg); color: var(--warn); }
-.s-bad { background: var(--bad-bg); color: var(--bad); }
-.s-info { background: var(--info-bg); color: var(--info); }
-.s-none { background: var(--surface-2); color: var(--muted); }
-.links { display: flex; gap: 14px; font-size: 13px; }
-.links a { color: var(--accent); font-weight: 600; text-decoration: none; display: inline-flex; gap: 4px; align-items: center; }
-.links a:hover { text-decoration: underline; }
-.links svg { width: 14px; height: 14px; }
-
-.empty, .error { text-align: center; color: var(--muted); padding: 40px 16px; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); }
-.error b { color: var(--bad); display: block; margin-bottom: 4px; }
-.skel { height: 72px; border-radius: 10px; background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: sh 1.2s infinite; }
-@keyframes sh { to { background-position: -200% 0; } }
-footer { color: var(--muted); font-size: 13px; padding-block: 0 32px; }
-footer a { color: inherit; }
-@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
-@media (min-width: 640px) {
-  .song { grid-template-columns: 52px 1fr; padding: 16px 18px 16px 12px; }
-  .num { font-size: 26px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before { animation: none !important; transition: none !important; }
 }
-.s-new { background: var(--accent-soft); color: var(--accent); }
-.month { flex: none; align-self: center; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--muted); padding: 0 2px 0 6px; }
-.chip.agenda { border-color: var(--accent); }
-.note { margin: 0 0 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; color: var(--fg); }
-.badge { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-weight: 700; font-size: 12px; margin-left: 6px; white-space: nowrap; }
-.meet { display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 14px; border-top: 1px solid var(--line); }
-.meet:first-child { border-top: 0; }
-.meet.past { opacity: .55; }
-.day { display: grid; justify-items: center; align-content: start; line-height: 1; }
-.day b { font-family: var(--font-display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; }
-.day small { text-transform: uppercase; font-size: 11px; letter-spacing: .1em; color: var(--muted); font-weight: 700; margin-top: 4px; }
+@media (prefers-reduced-transparency: reduce) {
+  .card, .bar-in, .panel, .icon-btn, .note { backdrop-filter: none; -webkit-backdrop-filter: none; background: #3a2416; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div class="eyebrow"><span class="dot off" id="live"></span><span id="status">Carregando planilha…</span></div>
-    <h1 id="sheetTitle">Louvor <em>Jovens</em></h1>
-    <p class="sub" id="sheetSub">Músicas dos ensaios e cultos</p>
-    <div class="tools">
-      <button class="btn" id="refresh" type="button" aria-label="Atualizar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>Atualizar
-      </button>
-      <a class="btn" id="openSheet" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Editar planilha
-      </a>
-    </div>
-  </header>
+<div class="bg" aria-hidden="true"></div>
+<div class="app">
+  <div class="wrap">
+    <header class="top">
+      <h1 class="brand">Louvor Jovens <span class="sync" id="status">Carregando planilha…</span></h1>
+      <div class="top-actions">
+        <button class="icon-btn" id="btnSearch" type="button" aria-label="Buscar música"></button>
+        <button class="icon-btn" id="btnAgenda" type="button" aria-label="Agenda"></button>
+        <button class="icon-btn" id="refresh" type="button" aria-label="Atualizar"></button>
+      </div>
+    </header>
+    <nav class="events" id="events" aria-label="Eventos"></nav>
+  </div>
+
+  <main class="stage-wrap" id="main">
+    <div class="skel"></div>
+  </main>
 </div>
 
-<div class="bar">
-  <div class="wrap">
-    <div class="chips" id="chips" role="toolbar" aria-label="Eventos"></div>
-    <div class="filters">
-      <input id="q" type="search" placeholder="Buscar música ou autor" aria-label="Buscar música ou autor">
-      <select id="voz" aria-label="Filtrar por voz"><option value="">Todas as vozes</option></select>
-    </div>
+<div class="bar" id="bar" hidden>
+  <div class="bar-in">
+    <button class="pb" id="prev" type="button" aria-label="Música anterior"></button>
+    <button class="pb hide-s" id="list" type="button" aria-label="Lista de músicas"></button>
+    <button class="pb" id="next" type="button" aria-label="Próxima música"></button>
+    <div class="now" id="now"></div>
+    <div class="links" id="links"></div>
   </div>
 </div>
 
-<div class="wrap">
-  <main id="main">
-    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
-  </main>
-  <footer>Os dados vêm direto da planilha do Google. Edite lá e toque em <b>Atualizar</b>.</footer>
+<div class="sheet" id="sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="grab"></div>
+    <div class="ph"><h2 id="sheetTitle"></h2><button class="icon-btn" id="close" type="button" aria-label="Fechar"></button></div>
+    <div id="sheetBody"></div>
+  </div>
 </div>
 
 <script>
 const SHEET_ID = "1UUcfkqzARSFsYahlaAvpDdeVIa9WhOvR_9NknEPz6Cc";
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
-document.getElementById("openSheet").href = SHEET_URL;
+// Ícones Phosphor (MIT), paths copiados do pacote @phosphor-icons/core 2.1.1
+const ICONS = {"play-fill": ["M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"], "skip-back-fill": ["M208,47.88V208.12a16,16,0,0,1-24.43,13.43L64,146.77V216a8,8,0,0,1-16,0V40a8,8,0,0,1,16,0v69.23L183.57,34.45A15.95,15.95,0,0,1,208,47.88Z"], "skip-forward-fill": ["M208,40V216a8,8,0,0,1-16,0V146.77L72.43,221.55A15.95,15.95,0,0,1,48,208.12V47.88A15.95,15.95,0,0,1,72.43,34.45L192,109.23V40a8,8,0,0,1,16,0Z"], "list-bullets": ["M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"], "calendar-blank": ["M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"], "music-notes": ["M212.92,17.69a8,8,0,0,0-6.86-1.45l-128,32A8,8,0,0,0,72,56V166.08A36,36,0,1,0,88,196V110.25l112-28v51.83A36,36,0,1,0,216,164V24A8,8,0,0,0,212.92,17.69ZM52,216a20,20,0,1,1,20-20A20,20,0,0,1,52,216ZM88,93.75V62.25l112-28v31.5ZM180,184a20,20,0,1,1,20-20A20,20,0,0,1,180,184Z"], "youtube-logo-fill": ["M234.33,69.52a24,24,0,0,0-14.49-16.4C185.56,39.88,131,40,128,40s-57.56-.12-91.84,13.12a24,24,0,0,0-14.49,16.4C19.08,79.5,16,97.74,16,128s3.08,48.5,5.67,58.48a24,24,0,0,0,14.49,16.41C69,215.56,120.4,216,127.34,216h1.32c6.94,0,58.37-.44,91.18-13.11a24,24,0,0,0,14.49-16.41c2.59-10,5.67-28.22,5.67-58.48S236.92,79.5,234.33,69.52Zm-73.74,65-40,28A8,8,0,0,1,108,156V100a8,8,0,0,1,12.59-6.55l40,28a8,8,0,0,1,0,13.1Z"], "arrow-clockwise": ["M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"], "magnifying-glass": ["M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"], "microphone-stage": ["M168,16A72.07,72.07,0,0,0,96,88a73.29,73.29,0,0,0,.63,9.42L27.12,192.22A15.93,15.93,0,0,0,28.71,213L43,227.29a15.93,15.93,0,0,0,20.78,1.59l94.81-69.53A73.29,73.29,0,0,0,168,160a72,72,0,1,0,0-144Zm56,72a55.72,55.72,0,0,1-11.16,33.52L134.49,43.16A56,56,0,0,1,224,88ZM54.32,216,40,201.68,102.14,117A72.37,72.37,0,0,0,139,153.86ZM112,88a55.67,55.67,0,0,1,11.16-33.51l78.34,78.34A56,56,0,0,1,112,88Zm-2.35,58.34a8,8,0,0,1,0,11.31l-8,8a8,8,0,1,1-11.31-11.31l8-8A8,8,0,0,1,109.67,146.33Z"], "x": ["M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"], "pencil-simple": ["M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"], "caret-left": ["M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"], "caret-right": ["M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"]};
+const ico = n => `<svg class="i" viewBox="0 0 256 256" aria-hidden="true">${ICONS[n].map(d => `<path d="${d}"/>`).join("")}</svg>`;
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const norm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-const state = { events: [], agenda: [], selected: null, q: "", voz: "" };
+const state = { events: [], agenda: [], ev: 0, song: 0, sheet: null, q: "", voz: "" };
 
 function parseCSV(text) {
   const rows = []; let row = [], cell = "", q = false;
@@ -276,8 +320,7 @@ function parseTab(rows, tab) {
     if (f.length === 1 && !title && !events.length && !pending && !inAgenda && !agenda.length) { title = f[0]; continue; }
     if (f.length === 1 && /^(encontros|agenda|programa)/.test(norm(f[0]))) { inAgenda = true; cur = null; continue; }
     if (inAgenda && DATE_NUM.test(r[0])) {
-      const d = dateOf(r[0], year);
-      agenda.push({ date: d, raw: r[0], what: r[1] || "", where: r[2] || "", time: r[3] || "", note: r.slice(4).filter(Boolean).join(" · "), tab });
+      agenda.push({ date: dateOf(r[0], year), raw: r[0], what: r[1] || "", where: r[2] || "", time: r[3] || "", note: r.slice(4).filter(Boolean).join(", "), tab });
       continue;
     }
     if (f.length === 1) {
@@ -288,7 +331,7 @@ function parseTab(rows, tab) {
       const g = k => (cols[k] >= 0 ? r[cols[k]] : "") || "";
       cur.songs.push({ n: g("n"), musica: g("musica"), autor: g("autor"), voz: g("voz"), obs: g("obs"), tom: g("tom"), link: g("link") });
     } else if (cur && f.length > 1 && cols && !r[cols.musica] && cur.songs.length === 0) {
-      cur.notes.push(f.join(" · "));
+      cur.notes.push(f.join(", "));
     }
   }
   return { title, events: events.filter(e => e.songs.length || e.notes.length), agenda };
@@ -296,16 +339,14 @@ function parseTab(rows, tab) {
 
 function statusClass(obs) {
   const o = norm(obs);
-  if (!o) return "s-none";
-  if (o === "ok" || o.includes("pronto") || o.includes("fechad")) return "s-ok";
-  if (o.includes("nao ensai") || o.includes("falta")) return "s-bad";
-  if (o.includes("nova") || o.includes("novo")) return "s-new";
-  if (o.includes("mais") || o.includes("ultimo") || o.includes("atencao")) return "s-warn";
-  return "s-info";
+  if (o === "ok" || o.includes("pronto") || o.includes("fechad")) return "t-ok";
+  if (o.includes("nao ensai") || o.includes("falta")) return "t-bad";
+  if (o.includes("nova") || o.includes("novo")) return "t-new";
+  if (o.includes("mais") || o.includes("ultimo") || o.includes("atencao")) return "t-warn";
+  return "t-info";
 }
 const voices = v => v.split(/[\/,&]| e /).map(s => s.trim()).filter(Boolean);
 const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
-const fmtDate = d => d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }).replace(/\./g, "");
 const fmtShort = d => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 function relDays(d) {
   const diff = Math.round((d - today()) / 864e5);
@@ -314,8 +355,7 @@ function relDays(d) {
   return "";
 }
 function nextEventIndex(events) {
-  const t = today();
-  let best = -1;
+  const t = today(); let best = -1;
   events.forEach((e, i) => { if (e.date && e.date >= t && (best < 0 || e.date < events[best].date)) best = i; });
   return best;
 }
@@ -327,118 +367,176 @@ function pickDefault(events) {
   return best >= 0 ? best : 0;
 }
 
-const ICON_YT = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-const ICON_CIFRA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
-const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>';
-
-function songHTML(s, i) {
-  const parts = s.musica.split("/").map(p => p.trim()).filter(Boolean);
-  const firstAuthor = s.autor.split(/[\/,]/)[0].trim();
-  const query = encodeURIComponent(`${parts[0]} ${firstAuthor}`.trim());
-  const yt = s.link && /^https?:/i.test(s.link) ? s.link : `https://www.youtube.com/results?search_query=${query}`;
-  return `<li class="song">
-    <div class="num">${esc(s.n || i + 1)}</div>
-    <div class="body">
-      <p class="title">${parts.map(p => `<span class="medley">${esc(p)}</span>`).join("")}</p>
-      ${s.autor ? `<p class="artist">${esc(s.autor)}</p>` : ""}
-      <div class="meta">
-        ${voices(s.voz).map(v => `<button type="button" class="voice" data-voz="${esc(v)}">${ICON_MIC}${esc(v)}</button>`).join("")}
-        ${s.tom ? `<span class="status s-none">Tom ${esc(s.tom)}</span>` : ""}
-        ${s.obs ? `<span class="status ${statusClass(s.obs)}">${esc(cap(s.obs))}</span>` : ""}
-      </div>
-      <div class="links">
-        <a href="${esc(yt)}" target="_blank" rel="noopener">${ICON_YT}Ouvir</a>
-        <a href="https://www.cifraclub.com.br/?q=${query}" target="_blank" rel="noopener">${ICON_CIFRA}Cifra</a>
-      </div>
-    </div>
-  </li>`;
+// Capa gerada a partir do nome da música: sempre a mesma cor para a mesma música.
+function hues(title) {
+  let h = 0; for (const c of norm(title)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const base = 8 + (h % 46);           // tons quentes: vermelho, laranja, âmbar
+  const shift = (h >>> 8) % 3;
+  const alt = [base + 300, base + 25, base + 190][shift] % 360;
+  return [`hsl(${base} 72% 52%)`, `hsl(${alt} 55% ${shift === 2 ? 30 : 24}%)`];
 }
+function mono(title) {
+  const w = title.split("/")[0].trim().split(/\s+/).filter(x => x.length > 2 || /^[A-ZÁÉÍÓÚ]/.test(x));
+  return ((w[0] || title)[0] + (w[1] ? w[1][0] : "")).toUpperCase();
+}
+const artVars = s => { const [a, b] = hues(s.musica); return `--a1:${a};--a2:${b}`; };
+const ytURL = s => {
+  if (s.link && /^https?:/i.test(s.link)) return s.link;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${s.musica.split("/")[0]} ${s.autor.split(/[\/,]/)[0]}`.trim())}`;
+};
+const cifraURL = s => `https://www.cifraclub.com.br/?q=${encodeURIComponent(`${s.musica.split("/")[0]} ${s.autor.split(/[\/,]/)[0]}`.trim())}`;
 
-function renderChips() {
+function renderEvents() {
   const nextIdx = nextEventIndex(state.events);
   let lastTab = null, html = "";
-  if (state.agenda.length) html += `<button type="button" class="chip agenda" data-i="agenda" aria-pressed="${state.selected === "agenda" && !state.q && !state.voz}"><b>Agenda</b><small>${state.agenda.length} encontros</small></button>`;
   state.events.forEach((e, i) => {
-    if (e.tab !== lastTab) { html += `<span class="month">${esc(cap(e.tab))}</span>`; lastTab = e.tab; }
-    html += `<button type="button" class="chip" data-i="${i}" aria-pressed="${state.selected === i && !state.q && !state.voz}">
-      <b>${esc(e.label)}</b>
-      <small>${i === nextIdx ? '<span class="next">Próximo · </span>' : ""}${e.date ? esc(fmtShort(e.date)) : `${e.songs.length} músicas`}</small>
-    </button>`;
+    if (e.tab !== lastTab) { html += `<span class="mo">${esc(cap(e.tab))}</span>`; lastTab = e.tab; }
+    html += `<button type="button" class="ev" data-i="${i}" aria-pressed="${state.ev === i}"><b>${esc(e.label)}</b><small>${i === nextIdx ? '<span class="nx">Próximo </span>' : ""}${e.date ? esc(fmtShort(e.date)) : `${e.songs.length} músicas`}</small></button>`;
   });
-  $("#chips").innerHTML = html;
-  const sel = $(`.chip[data-i="${state.selected}"]`);
+  $("#events").innerHTML = html;
+  const sel = $(`.ev[data-i="${state.ev}"]`);
   if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
 }
 
-function renderVoices() {
-  const all = new Map();
-  state.events.forEach(e => e.songs.forEach(s => voices(s.voz).forEach(v => all.set(norm(v), v))));
-  const opts = [...all.values()].sort((a, b) => a.localeCompare(b, "pt-BR"));
-  $("#voz").innerHTML = `<option value="">Todas as vozes</option>` + opts.map(v => `<option value="${esc(norm(v))}">${esc(v)}</option>`).join("");
-  $("#voz").value = state.voz;
-}
+function meetFor(e) { return e && e.date && state.agenda.find(a => a.date && +a.date === +e.date); }
 
-function eventHTML(e, songs) {
-  const counts = {};
-  songs.forEach(s => { if (s.obs) { const k = s.obs.toLowerCase(); counts[k] = (counts[k] || 0) + 1; } });
-  const rel = e.date ? relDays(e.date) : "";
-  const meet = e.date && state.agenda.find(a => a.date && +a.date === +e.date);
-  const when = [e.date ? fmtDate(e.date) : "", meet && meet.time, meet && meet.where].filter(Boolean).map(esc).join(" · ");
-  const count = songs.length ? `${songs.length} ${songs.length === 1 ? "música" : "músicas"}` : "";
-  return `<section>
-    <div class="event-head">
-      <div><span class="kind">${esc(e.kind)}</span><h2>${esc(e.label)}</h2></div>
-      <div class="when">${[when, count].filter(Boolean).join(" · ")}${rel ? `<span class="badge">${rel}</span>` : ""}</div>
-    </div>
-    ${meet && meet.note ? `<p class="note">${esc(meet.note)}</p>` : ""}
-    ${Object.keys(counts).length > 1 ? `<div class="summary">${Object.entries(counts).map(([k, n]) => `<span class="status ${statusClass(k)}">${n} · ${esc(cap(k))}</span>`).join("")}</div>` : ""}
-    ${e.notes.map(n => `<p class="note">${esc(n)}</p>`).join("")}
-    ${songs.length ? `<ol class="list">${songs.map(songHTML).join("")}</ol>` : ""}
-  </section>`;
-}
-
-function agendaHTML() {
-  const t = today();
-  const items = [...state.agenda].sort((a, b) => (a.date || 0) - (b.date || 0));
-  return `<section>
-    <div class="event-head"><div><span class="kind">Calendário</span><h2>Agenda</h2></div><div class="when">${items.length} encontros</div></div>
-    <ol class="list agenda-list">${items.map(a => {
-      const past = a.date && a.date < t;
-      const rel = a.date ? relDays(a.date) : "";
-      const ev = state.events.findIndex(e => e.date && a.date && +e.date === +a.date);
-      return `<li class="meet${past ? " past" : ""}">
-        <div class="day"><b>${a.date ? a.date.getDate() : esc(a.raw)}</b><small>${a.date ? esc(a.date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")) : ""}</small></div>
-        <div class="body">
-          <p class="title">${esc(a.what)}${rel ? ` <span class="badge">${rel}</span>` : ""}</p>
-          <p class="artist">${[a.date && cap(a.date.toLocaleDateString("pt-BR", { weekday: "long" })), a.time, a.where].filter(Boolean).map(esc).join(" · ")}</p>
-          ${a.note ? `<div class="meta"><span class="status s-warn">${esc(a.note)}</span></div>` : ""}
-          ${ev >= 0 ? `<div class="links"><a href="#" data-goto="${ev}">${ICON_CIFRA}Ver músicas</a></div>` : ""}
-        </div>
-      </li>`;
-    }).join("")}</ol>
-  </section>`;
-}
-
-function render() {
-  renderChips();
+function renderStage() {
+  const e = state.events[state.ev];
   const main = $("#main");
-  if (!state.events.length && !state.agenda.length) { main.innerHTML = `<div class="empty">Nenhuma música encontrada na planilha.</div>`; return; }
+  if (!e) { main.innerHTML = `<div class="empty">Nenhuma música na planilha ainda.</div>`; $("#bar").hidden = true; return; }
+  const meet = meetFor(e);
+  const rel = e.date ? relDays(e.date) : "";
+  const whenTxt = [e.kind !== e.label ? e.kind : "", e.date && e.date.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }), meet && meet.time, meet && meet.where].filter(Boolean).map(esc).join(", ");
+  const when = `<div class="when">${rel ? `<b>${rel}</b>. ` : ""}${cap(whenTxt)}</div>`;
+  if (!e.songs.length) {
+    main.innerHTML = `<div class="wrap" style="display:grid;gap:14px">${e.notes.map(n => `<div class="note"><small>${esc(e.label)}</small>${esc(n)}</div>`).join("")}<div style="text-align:center">${when}</div></div>`;
+    $("#bar").hidden = true;
+    setBg(e.label);
+    return;
+  }
+  state.song = Math.min(state.song, e.songs.length - 1);
+  main.innerHTML = `<div class="stage" id="stage">${e.songs.map((s, i) => {
+    const parts = s.musica.split("/").map(p => p.trim()).filter(Boolean);
+    return `<div class="card" data-i="${i}" style="${artVars(s)}" role="group" aria-label="${esc(parts.join(", "))}">
+      <div class="art" data-mono="${esc(mono(s.musica))}">
+        <span class="nr">${esc(s.n || i + 1)}</span>
+        ${parts.length > 1 ? parts.slice(1).map(p => `<span class="medley">+ ${esc(p)}</span>`).join("") : ""}
+      </div>
+      <div class="cap"><h3>${esc(parts[0])}</h3><p>${esc(s.autor || " ")}</p></div>
+    </div>`;
+  }).join("")}</div>
+  <div class="wrap detail" id="detail"></div>
+  <div class="wrap" style="text-align:center">${when}</div>`;
+  $("#bar").hidden = false;
+  layout();
+}
+
+function layout() {
+  const e = state.events[state.ev]; if (!e || !e.songs.length) return;
+  const cur = state.song;
+  document.querySelectorAll(".card").forEach(c => {
+    const d = +c.dataset.i - cur, a = Math.abs(d);
+    const step = window.innerWidth < 560 ? 44 : 56;
+    const x = Math.sign(d) * (a === 0 ? 0 : step + (a - 1) * (step * .55));
+    c.style.setProperty("--x", `${x}%`);
+    c.style.setProperty("--s", (1 - Math.min(a, 3) * .14).toFixed(3));
+    c.style.setProperty("--z", 20 - a);
+    c.style.setProperty("--o", a > 2 ? 0 : 1);
+    c.style.setProperty("--b", a === 0 ? 1 : .5 - a * .08);
+    c.classList.toggle("is-cur", a === 0);
+    c.setAttribute("aria-hidden", a !== 0);
+  });
+  const s = e.songs[cur];
+  const parts = s.musica.split("/").map(p => p.trim()).filter(Boolean);
+  $("#detail").innerHTML = `<div class="chips">
+    ${voices(s.voz).map(v => `<button type="button" class="voz" data-voz="${esc(v)}">${ico("microphone-stage")}${esc(v)}</button>`).join("")}
+    ${s.tom ? `<span class="tag t-info">Tom ${esc(s.tom)}</span>` : ""}
+    ${s.obs ? `<span class="tag ${statusClass(s.obs)}">${esc(cap(s.obs))}</span>` : ""}
+  </div>`;
+  $("#now").setAttribute("style", artVars(s));
+  $("#now").innerHTML = `<div class="mini">${esc(mono(s.musica))}</div><div class="tx"><b>${esc(parts.join(" / "))}</b><span>${esc(s.autor)}</span></div><div class="prog" style="--p:${((cur + 1) / e.songs.length * 100).toFixed(1)}%"><i></i></div>`;
+  $("#links").innerHTML = `<a class="lk" href="${esc(ytURL(s))}" target="_blank" rel="noopener">${ico("youtube-logo-fill")}<span class="lbl">Ouvir</span></a><a class="lk" href="${esc(cifraURL(s))}" target="_blank" rel="noopener">${ico("music-notes")}<span class="lbl">Cifra</span></a>`;
+  $("#prev").disabled = cur === 0;
+  $("#next").disabled = cur === e.songs.length - 1;
+  setBg(s.musica);
+}
+
+function setBg(title) {
+  const [a, b] = hues(title);
+  document.documentElement.style.setProperty("--c1", a);
+  document.documentElement.style.setProperty("--c2", b);
+}
+
+function go(i) {
+  const e = state.events[state.ev]; if (!e) return;
+  state.song = Math.max(0, Math.min(e.songs.length - 1, i));
+  layout();
+}
+function selectEvent(i, song = 0) {
+  state.ev = i; state.song = song;
+  renderEvents(); renderStage();
+}
+
+/* painel */
+function openSheet(kind) { state.sheet = kind; renderSheet(); $("#sheet").hidden = false; }
+function closeSheet() { state.sheet = null; $("#sheet").hidden = true; }
+function songRow(s, ei, si, extra = "") {
+  const parts = s.musica.split("/").map(p => p.trim()).filter(Boolean);
+  const cur = ei === state.ev && si === state.song;
+  return `<button type="button" class="row${cur ? " cur" : ""}" data-ev="${ei}" data-song="${si}" style="${artVars(s)}">
+    <span class="mini">${esc(mono(s.musica))}</span>
+    <span><b>${esc(parts.join(" / "))}</b><span>${esc([s.autor, s.voz].filter(Boolean).join(". "))}</span></span>
+    ${s.obs ? `<span class="tag ${statusClass(s.obs)}">${esc(cap(s.obs))}</span>` : extra}
+  </button>`;
+}
+function renderSheet() {
+  const body = $("#sheetBody");
+  if (state.sheet === "list") {
+    const e = state.events[state.ev];
+    $("#sheetTitle").textContent = e.label;
+    body.innerHTML = e.songs.map((s, i) => songRow(s, state.ev, i)).join("");
+  } else if (state.sheet === "agenda") {
+    $("#sheetTitle").textContent = "Agenda";
+    const t = today();
+    const items = [...state.agenda].sort((a, b) => (a.date || 0) - (b.date || 0));
+    body.innerHTML = items.length ? items.map(a => {
+      const ev = state.events.findIndex(e => e.date && a.date && +e.date === +a.date);
+      const rel = a.date ? relDays(a.date) : "";
+      return `<button type="button" class="row meet${a.date && a.date < t ? " past" : ""}" ${ev >= 0 ? `data-ev="${ev}" data-song="0"` : "disabled"}>
+        <span class="mini">${a.date ? a.date.getDate() : esc(a.raw)}<small>${a.date ? esc(a.date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")) : ""}</small></span>
+        <span><b>${esc(a.what)}</b><span>${esc([a.date && cap(a.date.toLocaleDateString("pt-BR", { weekday: "long" })), a.time, a.where].filter(Boolean).join(", "))}${a.note ? `. ${esc(a.note)}` : ""}</span></span>
+        ${rel ? `<span class="tag t-new">${rel}</span>` : ""}
+      </button>`;
+    }).join("") : `<div class="empty">Nenhum encontro na planilha.</div>`;
+  } else if (state.sheet === "search") {
+    $("#sheetTitle").textContent = "Buscar";
+    const all = new Map();
+    state.events.forEach(e => e.songs.forEach(s => voices(s.voz).forEach(v => all.set(norm(v), v))));
+    const opts = [...all.values()].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    if (!$("#q")) {
+      body.innerHTML = `<div class="find"><input id="q" type="search" placeholder="Música ou autor" aria-label="Música ou autor" autocomplete="off">
+        <select id="voz" aria-label="Voz"><option value="">Todas as vozes</option>${opts.map(v => `<option value="${esc(norm(v))}">${esc(v)}</option>`).join("")}</select></div><div id="results"></div>`;
+      $("#q").value = state.q; $("#voz").value = state.voz;
+      $("#q").addEventListener("input", ev => { state.q = ev.target.value; renderResults(); });
+      $("#voz").addEventListener("change", ev => { state.voz = ev.target.value; renderResults(); });
+    }
+    renderResults();
+  }
+}
+function renderResults() {
   const q = norm(state.q), vz = state.voz;
   const match = s => (!q || norm(s.musica + " " + s.autor).includes(q)) && (!vz || voices(s.voz).some(v => norm(v) === vz));
-  let html;
-  if (q || vz) {
-    const order = state.events.map((e, i) => i).sort((a, b) => (state.events[b].date || 0) - (state.events[a].date || 0));
-    html = order.map(i => { const e = state.events[i]; const songs = e.songs.filter(match); return songs.length ? eventHTML(e, songs) : ""; }).join("");
-    if (!html) html = `<div class="empty">Nada encontrado para essa busca.</div>`;
-  } else if (state.selected === "agenda") {
-    html = agendaHTML();
-  } else {
-    const e = state.events[state.selected];
-    html = e ? eventHTML(e, e.songs) : "";
+  const order = state.events.map((e, i) => i).sort((a, b) => (state.events[b].date || 0) - (state.events[a].date || 0));
+  let html = "";
+  for (const i of order) {
+    const e = state.events[i];
+    const rows = e.songs.map((s, si) => match(s) ? songRow(s, i, si) : "").join("");
+    if (rows) html += `<div class="grp">${esc(e.label)}${e.date ? `, ${esc(fmtShort(e.date))}` : ""}</div>${rows}`;
   }
-  main.innerHTML = html;
+  $("#results").innerHTML = html || `<div class="empty">Nada encontrado.</div>`;
 }
 
+/* dados */
 async function fetchTab(name) {
   try {
     const r = await fetch(`/api/sheet?sheet=${encodeURIComponent(name)}`, { cache: "no-store" });
@@ -451,17 +549,14 @@ async function fetchTab(name) {
   if (window.EMBED_TABS && window.EMBED_TABS[name]) { window.IS_SNAPSHOT = true; return window.EMBED_TABS[name]; }
   return null;
 }
-
-// Procura uma aba para cada mês. Abas que não existem fazem o Google devolver a primeira aba,
+// Abas que não existem fazem o Google devolver a primeira aba,
 // então só aceitamos a resposta se o título dela citar o mês procurado.
 async function fetchAll() {
-  const names = window.EMBED_TABS && location.protocol !== "https:" ? Object.keys(window.EMBED_TABS) : MONTHS;
-  const results = await Promise.all(names.map(async m => {
+  const results = await Promise.all(MONTHS.map(async m => {
     const csv = await fetchTab(m);
     if (!csv) return null;
     const rows = parseCSV(csv);
-    const head = norm(rows.slice(0, 3).flat().join(" "));
-    if (!head.includes(norm(m))) return null;
+    if (!norm(rows.slice(0, 3).flat().join(" ")).includes(norm(m))) return null;
     return parseTab(rows, m);
   }));
   const tabs = results.filter(Boolean);
@@ -473,47 +568,76 @@ async function load(first) {
   const btn = $("#refresh"); btn.classList.add("spin");
   try {
     const tabs = await fetchAll();
-    const prev = state.selected === "agenda" ? "agenda" : state.events[state.selected]?.name;
+    const prev = state.events[state.ev]?.name, prevSong = state.song;
     state.events = tabs.flatMap(t => t.events);
     state.agenda = tabs.flatMap(t => t.agenda);
-    const keep = prev === "agenda" ? "agenda" : state.events.findIndex(e => e.name === prev);
-    state.selected = !first && (keep === "agenda" || keep >= 0) ? keep : pickDefault(state.events);
-    renderVoices(); render();
-    $("#live").classList.remove("off");
+    const keep = state.events.findIndex(e => e.name === prev);
+    if (!first && keep >= 0) { state.ev = keep; state.song = prevSong; } else { state.ev = pickDefault(state.events); state.song = 0; }
+    renderEvents(); renderStage();
+    if (state.sheet) renderSheet();
     $("#status").textContent = window.IS_SNAPSHOT ? "Prévia com os dados de 23/10" : "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    try { localStorage.setItem("louvor-cache-v2", JSON.stringify({ events: state.events, agenda: state.agenda })); } catch (_) {}
+    try { localStorage.setItem("louvor-cache-v3", JSON.stringify({ events: state.events, agenda: state.agenda })); } catch (_) {}
   } catch (err) {
-    $("#live").classList.add("off");
     $("#status").textContent = "Sem conexão com a planilha";
-    if (!state.events.length) $("#main").innerHTML = `<div class="error"><b>Não consegui carregar a planilha.</b>Confira se ela está compartilhada como "Qualquer pessoa com o link" e tente de novo.</div>`;
+    if (!state.events.length) $("#main").innerHTML = `<div class="wrap"><div class="note"><small>Não consegui carregar a planilha</small>Confira se ela está compartilhada como "Qualquer pessoa com o link" e toque em atualizar.</div></div>`;
   } finally { btn.classList.remove("spin"); }
 }
 
-$("#chips").addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if (!b) return;
-  state.selected = b.dataset.i === "agenda" ? "agenda" : +b.dataset.i;
-  state.q = ""; state.voz = ""; $("#q").value = ""; $("#voz").value = "";
-  render(); window.scrollTo({ top: 0, behavior: "smooth" });
-});
-$("#q").addEventListener("input", e => { state.q = e.target.value; render(); });
-$("#voz").addEventListener("change", e => { state.voz = e.target.value; render(); });
-$("#main").addEventListener("click", e => {
-  const g = e.target.closest("[data-goto]");
-  if (g) { e.preventDefault(); state.selected = +g.dataset.goto; render(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-  const v = e.target.closest(".voice"); if (!v) return;
-  state.voz = norm(v.dataset.voz); $("#voz").value = state.voz; render();
-});
+/* ícones dos botões */
+$("#btnSearch").innerHTML = ico("magnifying-glass");
+$("#btnAgenda").innerHTML = ico("calendar-blank");
+$("#refresh").innerHTML = ico("arrow-clockwise");
+$("#close").innerHTML = ico("x");
+$("#prev").innerHTML = ico("skip-back-fill");
+$("#next").innerHTML = ico("skip-forward-fill");
+$("#list").innerHTML = ico("list-bullets");
+
+/* eventos de interface */
+$("#events").addEventListener("click", ev => { const b = ev.target.closest(".ev"); if (b) selectEvent(+b.dataset.i); });
+$("#prev").addEventListener("click", () => go(state.song - 1));
+$("#next").addEventListener("click", () => go(state.song + 1));
+$("#list").addEventListener("click", () => openSheet("list"));
+$("#now").addEventListener("click", () => openSheet("list"));
+$("#btnSearch").addEventListener("click", () => openSheet("search"));
+$("#btnAgenda").addEventListener("click", () => openSheet("agenda"));
 $("#refresh").addEventListener("click", () => load(false));
+$("#close").addEventListener("click", closeSheet);
+$("#sheet").addEventListener("click", ev => {
+  if (ev.target.id === "sheet") return closeSheet();
+  const r = ev.target.closest(".row[data-ev]"); if (!r) return;
+  selectEvent(+r.dataset.ev, +r.dataset.song); closeSheet();
+});
+$("#main").addEventListener("click", ev => {
+  if (moved) return;
+  const v = ev.target.closest(".voz");
+  if (v) { state.q = ""; state.voz = norm(v.dataset.voz); $("#sheetBody").innerHTML = ""; openSheet("search"); return; }
+  const c = ev.target.closest(".card"); if (c) go(+c.dataset.i);
+});
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && state.sheet) closeSheet();
+  if (state.sheet || /input|select/i.test(document.activeElement.tagName)) return;
+  if (ev.key === "ArrowRight") go(state.song + 1);
+  if (ev.key === "ArrowLeft") go(state.song - 1);
+});
+// deslizar no carrossel
+let sx = null, sy = 0, moved = false;
+$("#main").addEventListener("pointerdown", ev => { if (ev.target.closest("#stage")) { sx = ev.clientX; sy = ev.clientY; moved = false; } });
+window.addEventListener("pointerup", ev => {
+  if (sx === null) return;
+  const dx = ev.clientX - sx, dy = ev.clientY - sy; sx = null;
+  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { moved = true; go(state.song + (dx < 0 ? 1 : -1)); setTimeout(() => moved = false, 50); }
+});
+window.addEventListener("resize", layout);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(false); });
 
 // Mostra a última versão salva enquanto busca a nova
 try {
-  const c = JSON.parse(localStorage.getItem("louvor-cache-v2") || "null");
+  const c = JSON.parse(localStorage.getItem("louvor-cache-v3") || "null");
   if (c && c.events) {
     c.events.forEach(e => e.date = e.date ? new Date(e.date) : null);
     c.agenda.forEach(a => a.date = a.date ? new Date(a.date) : null);
-    state.events = c.events; state.agenda = c.agenda; state.selected = pickDefault(c.events);
-    renderVoices(); render();
+    state.events = c.events; state.agenda = c.agenda; state.ev = pickDefault(c.events);
+    renderEvents(); renderStage();
   }
 } catch (_) {}
 load(true);
