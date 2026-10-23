@@ -96,6 +96,9 @@ svg.i { width: 1em; height: 1em; fill: currentColor; flex: none; }
     linear-gradient(150deg, var(--a1), var(--a2) 70%); }
 .art::before { content: attr(data-mono); position: absolute; right: -6%; top: -12%; font-size: 120px; font-weight: 700; letter-spacing: -.06em;
   line-height: 1; color: rgb(255 255 255 / .13); }
+.has-img .art { background-image: linear-gradient(180deg, rgb(0 0 0 / .25), transparent 30%, transparent 55%, rgb(0 0 0 / .6)), var(--img); background-size: cover, auto 134%; background-position: center; background-repeat: no-repeat; }
+.has-img .art::before { display: none; }
+.has-img .mini, .mini.has-img { background-image: var(--img-s); background-size: cover; background-position: center; color: transparent; }
 .art .nr { position: absolute; left: 14px; top: 12px; font-weight: 600; font-size: 13px; color: rgb(255 255 255 / .8); font-variant-numeric: tabular-nums; }
 .art .medley { position: relative; font-size: 13px; color: rgb(255 255 255 / .85); font-weight: 500; }
 .cap { padding: 12px 6px 6px; text-align: center; }
@@ -379,11 +382,49 @@ function mono(title) {
   const w = title.split("/")[0].trim().split(/\s+/).filter(x => x.length > 2 || /^[A-ZÁÉÍÓÚ]/.test(x));
   return ((w[0] || title)[0] + (w[1] ? w[1][0] : "")).toUpperCase();
 }
-const artVars = s => { const [a, b] = hues(s.musica); return `--a1:${a};--a2:${b}`; };
-const ytURL = s => {
-  if (s.link && /^https?:/i.test(s.link)) return s.link;
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${s.musica.split("/")[0]} ${s.autor.split(/[\/,]/)[0]}`.trim())}`;
+// Vídeo do YouTube de cada música: usa o link da planilha se houver; senão o site procura
+// o primeiro resultado no YouTube (via /api/yt na Vercel) e guarda no aparelho.
+const ytQuery = s => `${s.musica.split("/")[0]} ${s.autor.split(/[\/,]/)[0]}`.trim();
+let YT = {};
+try { YT = JSON.parse(localStorage.getItem("louvor-yt") || "{}"); } catch (_) {}
+function ytId(s) {
+  const m = (s.link || "").match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([\w-]{11})/);
+  return m ? m[1] : YT[norm(ytQuery(s))] || null;
+}
+async function resolveYt(songs) {
+  const todo = songs.filter(s => !ytId(s) && !(norm(ytQuery(s)) in YT));
+  if (!todo.length) return false;
+  await Promise.all(todo.map(async s => {
+    try {
+      const r = await fetch(`/api/yt?q=${encodeURIComponent(ytQuery(s))}`);
+      if (!r.ok) return;
+      const j = await r.json();
+      if (j.id) YT[norm(ytQuery(s))] = j.id;
+    } catch (_) {}
+  }));
+  try { localStorage.setItem("louvor-yt", JSON.stringify(YT)); } catch (_) {}
+  return true;
+}
+const artVars = s => {
+  const [a, b] = hues(s.musica), id = ytId(s);
+  return `--a1:${a};--a2:${b}` + (id ? `;--img:url(https://i.ytimg.com/vi/${id}/hqdefault.jpg);--img-s:url(https://i.ytimg.com/vi/${id}/mqdefault.jpg)` : "");
 };
+const ytURL = s => {
+  const id = ytId(s);
+  if (id) return `https://www.youtube.com/watch?v=${id}`;
+  if (s.link && /^https?:/i.test(s.link)) return s.link;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(ytQuery(s))}`;
+};
+function applyArt() {
+  const e = state.events[state.ev]; if (!e) return;
+  document.querySelectorAll(".card").forEach(c => {
+    const s = e.songs[+c.dataset.i];
+    const keep = ["--x", "--s", "--z", "--o", "--b"].map(k => `${k}:${c.style.getPropertyValue(k)}`).join(";");
+    c.setAttribute("style", `${artVars(s)};${keep}`);
+    c.classList.toggle("has-img", !!ytId(s));
+  });
+  layout();
+}
 const cifraURL = s => `https://www.cifraclub.com.br/?q=${encodeURIComponent(`${s.musica.split("/")[0]} ${s.autor.split(/[\/,]/)[0]}`.trim())}`;
 
 function renderEvents() {
@@ -417,7 +458,7 @@ function renderStage() {
   state.song = Math.min(state.song, e.songs.length - 1);
   main.innerHTML = `<div class="stage" id="stage">${e.songs.map((s, i) => {
     const parts = s.musica.split("/").map(p => p.trim()).filter(Boolean);
-    return `<div class="card" data-i="${i}" style="${artVars(s)}" role="group" aria-label="${esc(parts.join(", "))}">
+    return `<div class="card${ytId(s) ? " has-img" : ""}" data-i="${i}" style="${artVars(s)}" role="group" aria-label="${esc(parts.join(", "))}">
       <div class="art" data-mono="${esc(mono(s.musica))}">
         <span class="nr">${esc(s.n || i + 1)}</span>
         ${parts.length > 1 ? parts.slice(1).map(p => `<span class="medley">+ ${esc(p)}</span>`).join("") : ""}
@@ -429,6 +470,7 @@ function renderStage() {
   <div class="wrap" style="text-align:center">${when}</div>`;
   $("#bar").hidden = false;
   layout();
+  resolveYt(e.songs).then(changed => { if (changed && state.events[state.ev] === e) applyArt(); });
 }
 
 function layout() {
@@ -454,8 +496,8 @@ function layout() {
     ${s.obs ? `<span class="tag ${statusClass(s.obs)}">${esc(cap(s.obs))}</span>` : ""}
   </div>`;
   $("#now").setAttribute("style", artVars(s));
-  $("#now").innerHTML = `<div class="mini">${esc(mono(s.musica))}</div><div class="tx"><b>${esc(parts.join(" / "))}</b><span>${esc(s.autor)}</span></div><div class="prog" style="--p:${((cur + 1) / e.songs.length * 100).toFixed(1)}%"><i></i></div>`;
-  $("#links").innerHTML = `<a class="lk" href="${esc(ytURL(s))}" target="_blank" rel="noopener">${ico("youtube-logo-fill")}<span class="lbl">Ouvir</span></a><a class="lk" href="${esc(cifraURL(s))}" target="_blank" rel="noopener">${ico("music-notes")}<span class="lbl">Cifra</span></a>`;
+  $("#now").innerHTML = `<div class="mini${ytId(s) ? " has-img" : ""}">${esc(mono(s.musica))}</div><div class="tx"><b>${esc(parts.join(" / "))}</b><span>${esc(s.autor)}</span></div><div class="prog" style="--p:${((cur + 1) / e.songs.length * 100).toFixed(1)}%"><i></i></div>`;
+  $("#links").innerHTML = `<a class="lk" href="${esc(ytURL(s))}" target="_blank" rel="noopener">${ico("youtube-logo-fill")}<span class="lbl">YouTube</span></a><a class="lk" href="${esc(cifraURL(s))}" target="_blank" rel="noopener">${ico("music-notes")}<span class="lbl">Cifra</span></a>`;
   $("#prev").disabled = cur === 0;
   $("#next").disabled = cur === e.songs.length - 1;
   setBg(s.musica);
@@ -484,7 +526,7 @@ function songRow(s, ei, si, extra = "") {
   const parts = s.musica.split("/").map(p => p.trim()).filter(Boolean);
   const cur = ei === state.ev && si === state.song;
   return `<button type="button" class="row${cur ? " cur" : ""}" data-ev="${ei}" data-song="${si}" style="${artVars(s)}">
-    <span class="mini">${esc(mono(s.musica))}</span>
+    <span class="mini${ytId(s) ? " has-img" : ""}">${esc(mono(s.musica))}</span>
     <span><b>${esc(parts.join(" / "))}</b><span>${esc([s.autor, s.voz].filter(Boolean).join(". "))}</span></span>
     ${s.obs ? `<span class="tag ${statusClass(s.obs)}">${esc(cap(s.obs))}</span>` : extra}
   </button>`;
