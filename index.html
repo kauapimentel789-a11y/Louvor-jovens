@@ -99,8 +99,8 @@ svg.i { width: 1em; height: 1em; fill: currentColor; flex: none; }
 .has-img .art { background-image: linear-gradient(180deg, rgb(0 0 0 / .25), transparent 30%, transparent 55%, rgb(0 0 0 / .6)), var(--img); background-size: cover, auto 134%; background-position: center; background-repeat: no-repeat; }
 .has-img .art::before { display: none; }
 .has-img .mini, .mini.has-img { background-image: var(--img-s); background-size: cover; background-position: center; color: transparent; }
-.art .video { position: absolute; inset: 0; z-index: 2; background: #000; }
-.art .video iframe { width: 100%; height: 100%; border: 0; display: block; }
+.stage .video { position: absolute; z-index: 30; background: #000; border-radius: 15px; overflow: hidden; }
+.stage .video iframe { width: 100%; height: 100%; border: 0; display: block; }
 .pb.play { background: var(--fg); color: var(--ink); }
 .pb.play:hover { background: var(--fg); }
 .art .nr { position: absolute; left: 14px; top: 12px; font-weight: 600; font-size: 13px; color: rgb(255 255 255 / .8); font-variant-numeric: tabular-nums; }
@@ -392,24 +392,24 @@ function mono(title) {
 // Vídeo do YouTube de cada música: usa o link da planilha se houver; senão o site procura
 // o primeiro resultado no YouTube (via /api/yt na Vercel) e guarda no aparelho.
 const ytQuery = s => `${s.musica.split("/")[0]} ${s.autor.split(/[\/,]/)[0]}`.trim();
-let YT = {};
-try { YT = JSON.parse(localStorage.getItem("louvor-yt") || "{}"); } catch (_) {}
+let YTIDS = {};
+try { YTIDS = JSON.parse(localStorage.getItem("louvor-yt") || "{}"); } catch (_) {}
 function ytId(s) {
   const m = (s.link || "").match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([\w-]{11})/);
-  return m ? m[1] : YT[norm(ytQuery(s))] || null;
+  return m ? m[1] : YTIDS[norm(ytQuery(s))] || null;
 }
 async function resolveYt(songs) {
-  const todo = songs.filter(s => !ytId(s) && !(norm(ytQuery(s)) in YT));
+  const todo = songs.filter(s => !ytId(s) && !(norm(ytQuery(s)) in YTIDS));
   if (!todo.length) return false;
   await Promise.all(todo.map(async s => {
     try {
       const r = await fetch(`/api/yt?q=${encodeURIComponent(ytQuery(s))}`);
       if (!r.ok) return;
       const j = await r.json();
-      if (j.id) YT[norm(ytQuery(s))] = j.id;
+      if (j.id) YTIDS[norm(ytQuery(s))] = j.id;
     } catch (_) {}
   }));
-  try { localStorage.setItem("louvor-yt", JSON.stringify(YT)); } catch (_) {}
+  try { localStorage.setItem("louvor-yt", JSON.stringify(YTIDS)); } catch (_) {}
   return true;
 }
 const artVars = s => {
@@ -530,11 +530,13 @@ function selectEvent(i, song = 0) {
   renderEvents(); renderStage();
 }
 
-/* player do YouTube dentro da capa da música atual */
-const player = { on: false, yt: null, paused: false, api: null };
+/* player do YouTube: um único player fica sobre a capa do centro e só troca de vídeo,
+   assim o navegador mantém o som liberado depois do primeiro toque */
+const player = { on: false, yt: null, ready: false, paused: false, api: null, box: null };
 function loadApi() {
   if (player.api) return player.api;
   player.api = new Promise(resolve => {
+    if (window.YT && window.YT.Player) return resolve(window.YT);
     window.onYouTubeIframeAPIReady = () => resolve(window.YT);
     const sc = document.createElement("script");
     sc.src = "https://www.youtube.com/iframe_api";
@@ -547,47 +549,65 @@ function setPlayIcon() {
   $("#play").innerHTML = ico(playing ? "pause-fill" : "play-fill");
   $("#play").setAttribute("aria-label", playing ? "Pausar" : "Tocar");
 }
+function placeVideo() {
+  const stage = $("#stage"), box = player.box, card = document.querySelector(`.card[data-i="${state.song}"]`);
+  if (!stage || !box || !card) return;
+  if (box.parentNode !== stage) stage.appendChild(box);
+  const w = card.offsetWidth, h = card.offsetHeight;
+  const left = (stage.clientWidth - w) / 2 + 9, top = stage.clientHeight / 2 - h / 2 + 9;
+  Object.assign(box.style, { left: `${left}px`, top: `${top}px`, width: `${w - 18}px`, height: `${w - 18}px` });
+}
 function stopPlayer() {
   if (player.yt) { try { player.yt.destroy(); } catch (_) {} }
-  player.yt = null; player.on = false; player.paused = false;
-  document.querySelectorAll(".art .video").forEach(v => v.remove());
+  if (player.box) player.box.remove();
+  Object.assign(player, { yt: null, box: null, on: false, ready: false, paused: false });
   setPlayIcon();
 }
-async function playCurrent() {
-  const e = state.events[state.ev], idx = state.song, s = e && e.songs[idx];
-  if (!s) return;
-  if (player.yt) { try { player.yt.destroy(); } catch (_) {} player.yt = null; }
-  document.querySelectorAll(".art .video").forEach(v => v.remove());
-  player.on = true; player.paused = false; setPlayIcon();
-  await resolveYt([s]);
-  const id = ytId(s);
-  if (!id) { player.on = false; setPlayIcon(); window.open(ytURL(s), "_blank", "noopener"); return; }
-  const YT = await loadApi();
-  if (!player.on || state.events[state.ev] !== e || state.song !== idx) return;
-  const art = document.querySelector(`.card[data-i="${idx}"] .art`);
-  if (!art) return;
+function createPlayer(id) {
   const box = document.createElement("div"); box.className = "video";
-  const slot = document.createElement("div"); box.appendChild(slot); art.appendChild(box);
+  const slot = document.createElement("div"); box.appendChild(slot);
+  player.box = box; placeVideo();
   player.yt = new YT.Player(slot, {
     videoId: id, width: "100%", height: "100%",
     playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
     events: {
-      onReady: ev => ev.target.playVideo(),
+      onReady: ev => { player.ready = true; ev.target.unMute(); ev.target.setVolume(100); ev.target.playVideo(); },
       onStateChange: ev => {
         if (ev.data === YT.PlayerState.PLAYING) { player.paused = false; setPlayIcon(); }
         if (ev.data === YT.PlayerState.PAUSED) { player.paused = true; setPlayIcon(); }
         if (ev.data === YT.PlayerState.ENDED) {
-          if (state.song < e.songs.length - 1) go(state.song + 1); else stopPlayer();
+          const e = state.events[state.ev];
+          if (e && state.song < e.songs.length - 1) go(state.song + 1); else stopPlayer();
         }
       },
     },
   });
 }
-function togglePlay() {
-  if (!player.on) return playCurrent();
-  if (!player.yt || !player.yt.getPlayerState) return;
-  if (player.paused) player.yt.playVideo(); else player.yt.pauseVideo();
+// Chamado no toque do botão: quando a API e o vídeo já estão prontos, cria o player no mesmo
+// toque (sem esperar nada), que é o que libera o som no celular.
+function playCurrent() {
+  const e = state.events[state.ev], idx = state.song, s = e && e.songs[idx];
+  if (!s) return;
+  const id = ytId(s);
+  player.on = true; player.paused = false; setPlayIcon();
+  if (id && window.YT && window.YT.Player) {
+    if (player.yt && player.ready) { placeVideo(); player.yt.loadVideoById(id); player.yt.unMute(); return; }
+    if (!player.yt) return createPlayer(id);
+  }
+  Promise.all([resolveYt([s]), loadApi()]).then(() => {
+    if (!player.on || state.events[state.ev] !== e || state.song !== idx) return;
+    const id2 = ytId(s);
+    if (!id2) { stopPlayer(); return; }
+    if (player.yt && player.ready) { placeVideo(); player.yt.loadVideoById(id2); }
+    else if (!player.yt) createPlayer(id2);
+  });
 }
+function togglePlay() {
+  if (!player.on || !player.yt) return playCurrent();
+  if (!player.ready) return;
+  if (player.paused) { player.yt.unMute(); player.yt.playVideo(); } else player.yt.pauseVideo();
+}
+window.addEventListener("resize", placeVideo);
 
 /* painel */
 function openSheet(kind) { state.sheet = kind; renderSheet(); $("#sheet").hidden = false; }
@@ -754,6 +774,7 @@ try {
   }
 } catch (_) {}
 load(true);
+loadApi();
 setInterval(() => { if (!document.hidden) load(false); }, 5 * 60000);
 </script>
 </body>
