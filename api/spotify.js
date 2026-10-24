@@ -3,7 +3,7 @@
 // (o refresh token sai do próprio site: abra /api/spotify?login e entre com a conta do Spotify).
 //   GET /api/spotify?login            → leva para o login do Spotify
 //   GET /api/spotify?code=...          → volta do login e mostra o SPOTIFY_REFRESH_TOKEN
-//   GET /api/spotify?name=...&s=música|autor&s=...  → cria/atualiza a playlist e devolve o link
+//   GET /api/spotify?name=...&s=música|autor|link&s=...  → cria/atualiza a playlist e devolve o link
 const API = "https://api.spotify.com/v1";
 const PREFIX = "Louvor Jovens · ";
 const { SPOTIFY_CLIENT_ID: ID, SPOTIFY_CLIENT_SECRET: SECRET, SPOTIFY_REFRESH_TOKEN: REFRESH } = process.env;
@@ -46,21 +46,43 @@ async function sp(path, opts = {}) {
 }
 
 // "Algo Novo / Fez um caminho" vira duas faixas; o autor acompanha a parte de mesmo índice quando há mais de um.
+// Um link do Spotify na coluna Link da planilha manda mais que a busca.
 function tracksOf(entry) {
-  const [musica, autor = ""] = entry.split("|");
+  const [musica, autor = "", link = ""] = entry.split("|");
   const parts = musica.split("/").map(p => p.trim()).filter(Boolean);
   const authors = autor.split(/[\/,]/).map(a => a.trim()).filter(Boolean);
-  return parts.map((p, i) => ({ title: p, artist: authors[i] || authors[0] || "" }));
+  const id = parts.length === 1 && (link.match(/open\.spotify\.com\/(?:intl-\w+\/)?track\/(\w{22})/) || [])[1];
+  return parts.map((p, i) => ({ title: p, artist: authors[i] || authors[0] || "", uri: id ? `spotify:track:${id}` : null }));
 }
 
-async function findTrack({ title, artist }) {
+const norm = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+  .replace(/\(.*?\)|\[.*?\]/g, " ").replace(/ - .*$/, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+
+// Só aceita resultado cujo nome bate com o da planilha; o artista certo ganha pontos.
+// Melhor deixar a música de fora do que colocar outra no lugar.
+function score(t, title, artist) {
+  const a = norm(t.name), b = norm(title);
+  const tit = a === b ? 3 : a.startsWith(b) || b.startsWith(a) ? 2 : 0;
+  if (!tit) return 0;
+  const names = (t.artists || []).map(x => norm(x.name));
+  const want = artist.split(/[\/,&]| e | feat /i).map(norm).filter(Boolean);
+  const art = want.some(w => names.some(n => n.includes(w) || w.includes(n))) ? 3 : 0;
+  return tit + art;
+}
+
+async function findTrack({ title, artist, uri }) {
+  if (uri) return uri;
   const tries = artist ? [`track:${title} artist:${artist}`, `${title} ${artist}`, title] : [title];
+  let best = null, bestScore = 0;
   for (const q of tries) {
-    const j = await sp(`/search?type=track&limit=1&market=BR&q=${encodeURIComponent(q)}`);
-    const t = j.tracks && j.tracks.items && j.tracks.items[0];
-    if (t) return t.uri;
+    const j = await sp(`/search?type=track&limit=10&market=BR&q=${encodeURIComponent(q)}`);
+    for (const t of (j.tracks && j.tracks.items) || []) {
+      const sc = t && score(t, title, artist);
+      if (sc > bestScore) { best = t; bestScore = sc; }
+    }
+    if (bestScore >= 5 || (!artist && bestScore >= 3)) break;
   }
-  return null;
+  return best ? best.uri : null;
 }
 
 async function findPlaylist(name) {
