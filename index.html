@@ -511,7 +511,10 @@ function renderStage() {
    o link fica salvo no aparelho enquanto a lista de músicas for a mesma */
 const SPOT = (() => { try { return JSON.parse(localStorage.getItem("louvor-spotify") || "{}"); } catch (_) { return {}; } })();
 let spotOff = false;
-const spotSig = e => e.songs.map(s => `${s.musica}|${s.autor}`).join("\n");
+// SPOT_V muda quando a busca do servidor melhora, para refazer as playlists já montadas
+const SPOT_V = 2;
+const spotEntry = s => `${s.musica}|${s.autor}|${/open\.spotify\.com/.test(s.link) ? s.link : ""}`;
+const spotSig = e => SPOT_V + "\n" + e.songs.map(spotEntry).join("\n");
 const spotName = e => [e.label, e.date && fmtShort(e.date)].filter(Boolean).join(" ");
 function renderSpot(e, info) {
   const box = $("#spot"); if (!box || state.events[state.ev] !== e) return;
@@ -525,8 +528,8 @@ async function ensureSpotify(e) {
   if (hit && hit.sig === sig) return renderSpot(e, hit);
   renderSpot(e, hit || "busy");
   try {
-    const qs = new URLSearchParams({ name: key });
-    e.songs.forEach(s => qs.append("s", `${s.musica}|${s.autor}`));
+    const qs = new URLSearchParams({ name: key, v: SPOT_V });
+    e.songs.forEach(s => qs.append("s", spotEntry(s)));
     const r = await fetch(`/api/spotify?${qs}`);
     if (r.status === 503 || r.status === 404) { spotOff = true; return renderSpot(e, null); }
     const j = await r.json();
